@@ -3,6 +3,10 @@
 ; * Work under progress!
 ; *************************************************************************
 .cpu "65816"
+
+TARGET_FLASH = 1              ; The code is being assembled for Flash
+TARGET_RAM = 2                ; The code is being assembled for RAM
+
 .include "macros_inc.asm"
 .include "bank_00_inc.asm"
 .include "vicky_def.asm"
@@ -10,6 +14,8 @@
 .include "keyboard_def.asm"
 .include "io_def.asm"
 
+.include "dram_inc.asm"                     ; old Definition file that was supposed to be a Memory map used by kernel_lib.asm
+.include "simulator_inc.asm"
 * = HRESET
                 CLC
                 XCE   ; go into native mode
@@ -98,6 +104,29 @@ GAME_START
             STA @lINT_MASK_REG1
             STA @lINT_MASK_REG2
 
+
+            LDA #0
+            STA BMP_POSITION_X
+            STA BMP_POSITION_Y
+            ; load the BMP file source adressv and BMP decoded destination address
+            LDA #>HL_BMP        ; TILES_NB[0]
+            STA BMP_PRSE_SRC_PTR
+            STA BMP_PRSE_DST_PTR
+
+            LDA #<HL_BMP        ; TILES_NB[1]
+            STA BMP_PRSE_SRC_PTR+1
+            STA BMP_PRSE_DST_PTR+1
+
+            LDA #`HL_BMP        ; TILES_NB[2]
+            STA BMP_PRSE_SRC_PTR+2
+            LDA #`HL_PIXEL ; write the result on the next page
+            STA BMP_PRSE_DST_PTR+2
+
+            ; Parse the BMP file to extract the data in a Byte array
+            ; of the picture resolution whide*hight*bpp (byte per pixel)
+            JSL IBMP_PARSER
+
+
             JSR INIT_DISPLAY
 
             ; Enable SOF
@@ -110,5 +139,7 @@ GAME_START
     GAME_LOOP
             BRA GAME_LOOP
 
+.include "BMP_Lib.asm"
+.include "Kernel_lib.asm"
 .include "interrupt_handler.asm"
 .include "display.asm"

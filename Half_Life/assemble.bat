@@ -6,8 +6,8 @@ REM md ..\bin\debug\roms
 
 :start
 del *.lst
-64tass --m65816 game-main.asm --long-address --flat  -b -o game-main.bin --list game-main.lst
-64tass --m65816 game-main.asm --long-address --flat  --intel-hex -o game-main.hex --list game-main_hex.lst
+64tass --m65816 game-main.asm -D TARGET=1 --long-address --flat  -b -o game-main.bin --list game-main.lst
+64tass --m65816 game-main.asm -D TARGET=2 --long-address --flat  --intel-hex -o game-main.hex --list game-main_hex.lst
 if errorlevel 1 goto fail
 
 REM copy kernel.hex ..\bin\debug\roms

@@ -118,7 +118,7 @@ INIT_DISPLAY
                 ; Load the Pixel
                 ;---------------------- B0
                 setaxl
-                LDX #<>TILE_SET_LEVEL_0_PIXEL
+                LDX #<>TILE_SET_LEVEL_0_PIXEL+1
                 LDY #0
                 LDA #$8000 ; 256 * 128 - this is 8 rows of tiles
                 MVN <`TILE_SET_LEVEL_0_PIXEL,$B0

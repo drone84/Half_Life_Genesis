@@ -104,7 +104,9 @@ GAME_START
             STA @lINT_MASK_REG1
             STA @lINT_MASK_REG2
 
-
+            ;-------------------------------------------------------
+            ;-- Extract the backgroubd pixel from the BMP picture --
+            ;-------------------------------------------------------
             LDA #0
             STA BMP_POSITION_X
             STA BMP_POSITION_Y
@@ -120,6 +122,32 @@ GAME_START
             LDA #`HL_BMP        ; TILES_NB[2]
             STA BMP_PRSE_SRC_PTR+2
             LDA #`HL_PIXEL ; write the result on the next page
+            STA BMP_PRSE_DST_PTR+2
+
+            ; Parse the BMP file to extract the data in a Byte array
+            ; of the picture resolution whide*hight*bpp (byte per pixel)
+            JSL IBMP_PARSER
+
+            ;-------------------------------------------------------
+            ;- Extract the tile level 0 pixel from the BMP picture -
+            ;-------------------------------------------------------
+            setas
+            setxl
+            LDA #0
+            STA BMP_POSITION_X
+            STA BMP_POSITION_Y
+            ; load the BMP file source adressv and BMP decoded destination address
+            LDA #>TILE_SET_LEVEL_0_BMP        ; TILES_NB[0]
+            STA BMP_PRSE_SRC_PTR
+            STA BMP_PRSE_DST_PTR
+
+            LDA #<TILE_SET_LEVEL_0_BMP        ; TILES_NB[1]
+            STA BMP_PRSE_SRC_PTR+1
+            STA BMP_PRSE_DST_PTR+1
+
+            LDA #`TILE_SET_LEVEL_0_BMP        ; TILES_NB[2]
+            STA BMP_PRSE_SRC_PTR+2
+            LDA #`TILE_SET_LEVEL_0_PIXEL ; write the result on the next page
             STA BMP_PRSE_DST_PTR+2
 
             ; Parse the BMP file to extract the data in a Byte array

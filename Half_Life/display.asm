@@ -28,18 +28,12 @@ INIT_DISPLAY
                 STA BORDER_CTRL_REG
 
                 ; enable graphics, tiles and sprites display
-                LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En; + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En ; + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
+                LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
                 STA MASTER_CTRL_REG_L
 
                 ; display intro screen
                 ; wait for user to press a key or joystick button
 
-                ; load tiles
-                ;setaxl
-                ;LDX #<>TILES
-                ;LDY #0
-                ;LDA #$2000 ; 256 * 32 - this is two rows of tiles
-                ;MVN <`TILES,$B0
 
                 setaxl
                 LDX #<>$0
@@ -71,6 +65,37 @@ INIT_DISPLAY
                 INX
                 CPX #0
                 BNE erase_Byte_04
+              erase_Byte_05:
+                STA @l $B50000,x
+                INX
+                CPX #0
+                BNE erase_Byte_05
+              erase_Byte_06:
+                STA @l $B60000,x
+                INX
+                CPX #0
+                BNE erase_Byte_06
+              erase_Byte_07:
+                STA @l $B70000,x
+                INX
+                CPX #0
+                BNE erase_Byte_07
+              erase_Byte_08:
+                STA @l $B80000,x
+                INX
+                CPX #0
+                BNE erase_Byte_08
+              erase_Byte_09:
+                STA @l $B90000,x
+                INX
+                CPX #0
+                BNE erase_Byte_09
+              erase_Byte_0A:
+                STA @l $BA0000,x
+                INX
+                CPX #0
+                BNE erase_Byte_0A
+
 
                 setaxl
                 ; load LUT
@@ -83,8 +108,23 @@ INIT_DISPLAY
                 LDY #<>GRPH_LUT1_PTR
                 LDA #1024
                 MVN <`PALETTE,<`GRPH_LUT1_PTR
-                ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
+
+                LDX #<>PALETTE_TILE_SET_LEVEL_0
+                LDY #<>GRPH_LUT2_PTR
+                LDA #1024
+                MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT2_PTR
+
+                ;load tiles pixel extracted from the BMP to the VRAM from @B0:0000
+                ; Load the Pixel
                 ;---------------------- B0
+                setaxl
+                LDX #<>TILE_SET_LEVEL_0_PIXEL
+                LDY #0
+                LDA #$8000 ; 256 * 128 - this is 8 rows of tiles
+                MVN <`TILE_SET_LEVEL_0_PIXEL,$B0
+
+                ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
+                ;---------------------- B6
                 LDX #<>HL_PIXEL
                 LDY #<>$B60000
                 LDA #$8000
@@ -94,7 +134,7 @@ INIT_DISPLAY
                 LDY #<>$B68000
                 LDA #$8000
                 MVN <`HL_PIXEL,<`$B68000
-                ;---------------------- B1
+                ;---------------------- B7
                 LDX #<>HL_PIXEL + $10000
                 LDY #<>$B70000
                 LDA #$8000
@@ -104,7 +144,7 @@ INIT_DISPLAY
                 LDY #<>$B78000
                 LDA #$8000
                 MVN <`HL_PIXEL + $18000,<`$B78000
-                ;---------------------- B2
+                ;---------------------- B8
                 LDX #<>HL_PIXEL + $20000
                 LDY #<>$B80000
                 LDA #$8000
@@ -114,7 +154,7 @@ INIT_DISPLAY
                 LDY #<>$B88000
                 LDA #$8000
                 MVN <`HL_PIXEL + $28000,<`$B88000
-                ;---------------------- B3
+                ;---------------------- B9
                 LDX #<>HL_PIXEL + $30000
                 LDY #<>$B90000
                 LDA #$8000
@@ -124,10 +164,10 @@ INIT_DISPLAY
                 LDY #<>$B98000
                 LDA #$8000
                 MVN <`HL_PIXEL + $38000,<`$B98000
-                ;---------------------- B4
+                ;---------------------- BA
                 LDX #<>HL_PIXEL + $40000
                 LDY #<>$BA0000
-                LDA #$B000
+                LDA #$B000 ; left over of the picture's pixel
                 MVN <`HL_PIXEL + $40000,<`$BA0000
                 ;----------------------
 
@@ -150,15 +190,18 @@ INIT_DISPLAY
 
                 setas
 
-                ;LDA #TILE_Enable + TILESHEET_256x256_En
-                ;STA @lTL0_CONTROL_REG
 
+                LDA #TILE_Enable + $4 + TILESHEET_256x256_En
+                STA @lTL0_CONTROL_REG
+                STA @lTL1_CONTROL_REG
                 ; enable tiles
                 ;LDA #TILE_Enable + TILESHEET_256x256_En
                 ;STA @lTL0_CONTROL_REG
 
                 ; load tileset
                 ;JSR LOAD_TILESET
+                JSR LOAD_TILE_MAP_0
+                JSR LOAD_TILE_MAP_1
 
                 ; render the first frame
                 ;JSR LOAD_SPRITES
@@ -170,6 +213,66 @@ INIT_DISPLAY
                 ;JSR UPDATE_DISPLAY
                 RTS
 
+; *********************************************************
+; * Copy the Tile map into the tile map register area
+; *********************************************************
+LOAD_TILE_MAP_0
+                LDX #0
+                LDY #0
+                setdbr $AF
+                setas
+    GET_TILE_0
+                LDA game_board_0,X
+                STA TILE_MAP0,Y
+                INY
+                setal
+                TYA
+                AND #$3F
+                CMP #40 ; 1 line is 40 tile
+                BNE LT_NEXT_TILE_0
+                TYA
+                CLC
+                ADC #24
+                TAY
+
+    LT_NEXT_TILE_0
+                setas
+                INX
+                CPX #(640/16) * (480 / 16)
+                BNE GET_TILE_0
+                RTS
+;
+; *********************************************************
+; * Copy the Tile map into the tile map register area
+; *********************************************************
+LOAD_TILE_MAP_1
+                LDX #0
+                LDY #0
+                setdbr $AF
+                setas
+    GET_TILE_1
+                LDA game_board_1,X
+                STA TILE_MAP1,Y
+                INY
+                setal
+                TYA
+                AND #$3F
+                CMP #40 ; 1 line is 40 tile
+                BNE LT_NEXT_TILE_1
+                TYA
+                CLC
+                ADC #24
+                TAY
+
+    LT_NEXT_TILE_1
+                setas
+                INX
+                CPX #(640/16) * (480 / 16)
+                BNE GET_TILE_1
+                RTS
+; *************************************************************
+;
+; *************************************************************
 LOAD_SPRITES
                 .as
 
@@ -855,69 +958,69 @@ LOAD_TILESET
 
 ; our resolution is 640 x 480 - tiles are 16 x 16 - therefore 40 x 30
 game_board
-                .text "........................................" ;1 - not shown
-                .text "........................................" ;2 - not shown
-                .text "........................................" ;3
-                .text "........................................" ;4 ; display score and remaining lives here?
-                .text "........................................" ;5
-                .text "........................................" ;6
-                .text "..GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG.." ;7
-                .text "..GGGGHHHHHHGGGGHHHHHHGGGGGGHHHHHHGGGG.." ;8
-                .text "..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.." ;9
-                .text "..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.." ;10
-                .text "..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.." ;11
-                .text "..WWWWWWWWWWWWWWGWWWWWGWWWWWWWWWWWWWWW.." ;12
-                .text "..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.." ;13
-                .text "..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.." ;14
-                .text "..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC.." ;15
-                .text "..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC.." ;16
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;17
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;18
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;19
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;20
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;21
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;22
-                .text "..AAAAAAAAAAAAAAAAcccccAAAAAAAAAAAAAAA.." ;23
-                .text "..AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.." ;24
-                .text "..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC.." ;25
-                .text "..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC.." ;26
-                .text "........................................" ;27
-                .text "........................................" ;28
-                .text "........................................" ;29
-                .text "........................................" ;30
-
-; PALETTE
-; .binary "assets/simple-tiles.data.pal"
-;
-; * = $170000
-; TILES
-; .binary "assets/simple-tiles.data"
+game_board_0
+.binary "assets/HL_V2_Tile_map_layer_1__00_00.map"
+game_board_1
+.binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
 
 
-;PALETTE
-;.binary "assets/simple-tiles.data.pal"
-;PALETTE_HL
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0D,$0E,$0F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$1A,$1B,$1C,$1D,$1E,$1F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$2A,$2B,$2C,$2D,$2E,$2F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$3A,$3B,$3C,$3D,$3E,$3F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte $78,$00,$00,$00,$00,$00,$00,$00,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E,$4F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte $78,$00,$00,$00,$00,$00,$00,$00,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5A,$5B,$5C,$5D,$5E,$5F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte $78,$00,$00,$00,$00,$00,$00,$00,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$6A,$6B,$6C,$6D,$6E,$6F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$7A,$7B,$7C,$7D,$7E,$7F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+
 PALETTE
 .binary "assets/halflife.pal"
+PALETTE_TILE_SET_LEVEL_0
+.binary "assets/HL_V2_tile_set_256.pal"
 * = $1a0000
-TILES
-.binary "assets/simple-tiles.data"
-;BITMAP
-* = $1B0000
-HL_1
-.binary "assets/halflife_1.pixel"
-* = $1C0000
-HL_2
-.binary "assets/halflife_2.pixel"
-* = $1D0000
-HL_3
-.binary "assets/halflife_3.pixel"
-* = $1E0000
-HL_4
-.binary "assets/halflife_4.pixel"
-* = $1F0000
-HL_5
-.binary "assets/halflife_5.pixel"
+TILES ; just there to keep the Sprit code not complaining, wont be used for enyting at the moment
+TILE_SET_LEVEL_0_BMP
+.binary "assets/HL_V2_tile_set_256.bmp"
+* = TILE_SET_LEVEL_0_BMP + $20000
+TILE_SET_LEVEL_0_PIXEL
+;* = $1B0000
+;HL_1
+;.binary "assets/halflife_1.pixel"
+;* = $1C0000
+;HL_2
+;.binary "assets/halflife_2.pixel"
+;* = $1D0000
+;HL_3
+;.binary "assets/halflife_3.pixel"
+;* = $1E0000
+;HL_4
+;.binary "assets/halflife_4.pixel"
+;* = $1F0000
+;HL_5
+;.binary "assets/halflife_5.pixel"
 * = $200000
 HL_BMP
 .binary "assets/halflife.bmp"

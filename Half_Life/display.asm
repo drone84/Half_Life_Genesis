@@ -114,7 +114,11 @@ INIT_DISPLAY
                 LDA #1024
                 MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT2_PTR
 
-                ;load tiles pixel extracted from the BMP to the VRAM from @B0:0000
+                LDX #<>SPRIT_GORDON_SCIENTIST_PAL
+                LDY #<>GRPH_LUT3_PTR
+                LDA #1024
+                MVN <`SPRIT_GORDON_SCIENTIST_PAL,<`GRPH_LUT3_PTR
+                ; load the tiles pixel extracted from the BMP to the VRAM from @B0:0000
                 ; Load the Pixel
                 ;---------------------- B0
                 setaxl
@@ -122,6 +126,16 @@ INIT_DISPLAY
                 LDY #0
                 LDA #$8000 ; 256 * 128 - this is 8 rows of tiles
                 MVN <`TILE_SET_LEVEL_0_PIXEL,$B0
+
+                ; load the strit pixel extracted from the BMP to the VRAM from @B1:0000
+                ; Load the Pixel
+                ;---------------------- B1
+                setaxl
+                LDX #<>SPRIT_GORDON_SCIENTIST_PIXEL+1
+                LDY #0
+                LDA #$0400 ; 32 * 32
+                MVN <`SPRIT_GORDON_SCIENTIST_PIXEL,$B1
+
 
                 ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
                 ;---------------------- B6
@@ -171,6 +185,7 @@ INIT_DISPLAY
                 MVN <`HL_PIXEL + $40000,<`$BA0000
                 ;----------------------
 
+                ; enable the bitmap engine
                 setas
                 LDA #1+2
                 STA @l BM_CONTROL_REG
@@ -187,10 +202,8 @@ INIT_DISPLAY
                 LDA #480
                 STA @l BM_Y_SIZE_L
 
-
+                ; enable the tile engine 0
                 setas
-
-
                 LDA #TILE_Enable + $4 + TILESHEET_256x256_En
                 STA @lTL0_CONTROL_REG
                 STA @lTL1_CONTROL_REG
@@ -199,9 +212,25 @@ INIT_DISPLAY
                 ;STA @lTL0_CONTROL_REG
 
                 ; load tileset
-                ;JSR LOAD_TILESET
                 JSR LOAD_TILE_MAP_0
                 JSR LOAD_TILE_MAP_1
+
+                ; enable the sprit engine
+                ; set the address of the sprit in the VRAM from VICKY point of vue
+                LDA #00
+                STA SP00_ADDY_PTR_L
+                STA SP00_ADDY_PTR_M
+                LDA #01
+                STA SP00_ADDY_PTR_H
+                ; write the position of the sprit on the screen (640x480)
+                setal
+                LDA #0000
+                STA SP00_X_POS_L
+                STA SP00_Y_POS_L
+                ; active the sprit 0
+                LDA #SPRITE_Enable +$04
+                STA SP00_CONTROL_REG
+
 
                 ; render the first frame
                 ;JSR LOAD_SPRITES
@@ -999,13 +1028,29 @@ game_board_1
 PALETTE
 .binary "assets/halflife.pal"
 PALETTE_TILE_SET_LEVEL_0
-.binary "assets/HL_V2_tile_set_256.pal"
+.binary "assets/HL_V2_tile_shifted_256.data.pal"
+;.binary "assets/HL_V2_tile_set_256.pal"HL_V2_tile_shifted_256.data
 * = $1a0000
 TILES ; just there to keep the Sprit code not complaining, wont be used for enyting at the moment
 TILE_SET_LEVEL_0_BMP
 .binary "assets/HL_V2_tile_set_256.bmp"
 * = TILE_SET_LEVEL_0_BMP + $20000
 TILE_SET_LEVEL_0_PIXEL
+
+
+
+* = $1B0000
+TILE_SET_LEVEL_1_BMP
+.binary "assets/HL_V2_tile_shifted_256.bmp"
+SPRIT_GORDON_SCIENTIST_BMP
+.binary "assets/HL_V2_tile_shifted_Gordon_sientist.bmp"
+* = TILE_SET_LEVEL_1_BMP + $20000
+TILE_SET_LEVEL_1_PIXEL
+* = SPRIT_GORDON_SCIENTIST_BMP +$20000
+SPRIT_GORDON_SCIENTIST_PIXEL
+.binary "assets/HL_V2_tile_shifted_Gordon_sientist_256.data"
+SPRIT_GORDON_SCIENTIST_PAL
+.binary "assets/HL_V2_tile_shifted_Gordon_sientist_256.data.pal"
 ;* = $1B0000
 ;HL_1
 ;.binary "assets/halflife_1.pixel"

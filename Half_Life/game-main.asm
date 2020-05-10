@@ -137,15 +137,15 @@ GAME_START
             STA BMP_POSITION_X
             STA BMP_POSITION_Y
             ; load the BMP file source adressv and BMP decoded destination address
-            LDA #>TILE_SET_LEVEL_0_BMP        ; TILES_NB[0]
+            LDA #>TILE_SET_LEVEL_1_BMP        ; TILES_NB[0]
             STA BMP_PRSE_SRC_PTR
             STA BMP_PRSE_DST_PTR
 
-            LDA #<TILE_SET_LEVEL_0_BMP        ; TILES_NB[1]
+            LDA #<TILE_SET_LEVEL_1_BMP        ; TILES_NB[1]
             STA BMP_PRSE_SRC_PTR+1
             STA BMP_PRSE_DST_PTR+1
 
-            LDA #`TILE_SET_LEVEL_0_BMP        ; TILES_NB[2]
+            LDA #`TILE_SET_LEVEL_1_BMP        ; TILES_NB[2]
             STA BMP_PRSE_SRC_PTR+2
             LDA #`TILE_SET_LEVEL_0_PIXEL ; write the result on the next page
             STA BMP_PRSE_DST_PTR+2
@@ -154,6 +154,31 @@ GAME_START
             ; of the picture resolution whide*hight*bpp (byte per pixel)
             JSL IBMP_PARSER
 
+            ;-------------------------------------------------------
+            ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
+            ;-------------------------------------------------------
+            setas
+            setxl
+            LDA #0
+            STA BMP_POSITION_X
+            STA BMP_POSITION_Y
+            ; load the BMP file source adressv and BMP decoded destination address
+            LDA #>SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[0]
+            STA BMP_PRSE_SRC_PTR
+            STA BMP_PRSE_DST_PTR
+
+            LDA #<SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[1]
+            STA BMP_PRSE_SRC_PTR+1
+            STA BMP_PRSE_DST_PTR+1
+
+            LDA #`SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[2]
+            STA BMP_PRSE_SRC_PTR+2
+            LDA #`SPRIT_GORDON_SCIENTIST_PIXEL ; write the result on the next page
+            STA BMP_PRSE_DST_PTR+2
+
+            ; Parse the BMP file to extract the data in a Byte array
+            ; of the picture resolution whide*hight*bpp (byte per pixel)
+            ; JSL IBMP_PARSER dosent seam to work on 32*32
 
             JSR INIT_DISPLAY
 

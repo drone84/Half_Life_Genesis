@@ -224,8 +224,9 @@ INIT_DISPLAY
                 STA SP00_ADDY_PTR_H
                 ; write the position of the sprit on the screen (640x480)
                 setal
-                LDA #0000
+                LDA PLAYER_X
                 STA SP00_X_POS_L
+                LDA PLAYER_Y
                 STA SP00_Y_POS_L
                 ; active the sprit 0
                 LDA #SPRITE_Enable +$04
@@ -443,39 +444,52 @@ INIT_NPC
 ; ****************************************************
 UPDATE_DISPLAY
                 .as
-                PHA
-                JSR UPDATE_HOME_TILES
-                JSR UPDATE_WATER_TILES
-                PLA
+                ;PHA
+                ;JSR UPDATE_HOME_TILES
+                ;JSR UPDATE_WATER_TILES
+                ;PLA
                 setal
+
         JOY_UP
-                BIT #1 ; up
+                LDA PLAYER_Y_MOV
+                CMP #1 ; up
                 BNE JOY_DOWN
+                LDA #0
+                ;STA PLAYER_Y_MOV
                 JSR PLAYER_MOVE_UP
-                BRA JOY_DONE
+                BRA JOY_LEFT
 
         JOY_DOWN
-                BIT #2 ; down
+                CMP #2 ; down
                 BNE JOY_LEFT
+                LDA #0
+                ;STA PLAYER_Y_MOV
                 JSR PLAYER_MOVE_DOWN
-                BRA JOY_DONE
+
+
+                ; BRA JOY_DONE i want to test the left/right key aswell
 
         JOY_LEFT
-                BIT #4
+                LDA PLAYER_X_MOV
+                CMP #2
                 BNE JOY_RIGHT
+                LDA #0
+                ;STA PLAYER_X_MOV
                 JSR PLAYER_MOVE_LEFT
                 BRA JOY_DONE
 
         JOY_RIGHT
-                BIT #8
+                CMP #1
                 BNE JOY_DONE
+                LDA #0
+                ;STA PLAYER_X_MOV
                 JSR PLAYER_MOVE_RIGHT
                 BRA JOY_DONE
 
         JOY_DONE
                 setas
-                JSR UPDATE_NPC_POSITIONS
-                JSR COLLISION_CHECK
+                ;JSR UPDATE_NPC_POSITIONS
+                ;JSR COLLISION_CHECK
                 RTS
 
 ; ****************************************************
@@ -522,59 +536,59 @@ UPDATE_NPC_POSITIONS
 ; ********************************************
 PLAYER_MOVE_DOWN
                 .al
-                LDA PLAYER_Y
+                LDA @l PLAYER_Y
                 CLC
-                ADC #32
+                ADC #2
                 ; check for collisions and out of screen
-                CMP #480 - 96
+                CMP #480 - 32
                 BCC PMD_DONE
-                LDA #480 - 96 ; the lowest position on screen
+                LDA #480 - 32 ; the lowest position on screen
 
         PMD_DONE
-                STA PLAYER_Y
-                STA SP15_Y_POS_L
+                STA @l PLAYER_Y
+                STA @l SP00_Y_POS_L
                 RTS
 
 PLAYER_MOVE_UP
-                LDA PLAYER_Y
+                LDA @l PLAYER_Y
                 SEC
-                SBC #32
+                SBC #2
                 ; check for collisions and out of screen
-                CMP #96
+                CMP #02
                 BCS PMU_DONE
-                LDA #96
+                LDA #02
 
         PMU_DONE
-                STA PLAYER_Y
-                STA SP15_Y_POS_L
+                STA @l PLAYER_Y
+                STA @l SP00_Y_POS_L
                 RTS
 
 PLAYER_MOVE_RIGHT
-                LDA PLAYER_X
+                LDA @l PLAYER_X
                 CLC
-                ADC #32
+                ADC #2
                 ; check for collisions and out of screen
-                CMP #640 - 64
+                CMP #640-16
                 BCC PMR_DONE
-                LDA #640 - 64 ; the lowest position on screen
+                LDA #640-16 ; the lowest position on screen
 
         PMR_DONE
-                STA PLAYER_X
-                STA SP15_X_POS_L
+                STA @l PLAYER_X
+                STA @l SP00_X_POS_L
                 RTS
 
 PLAYER_MOVE_LEFT
-                LDA PLAYER_X
+                LDA @l PLAYER_X
                 SEC
-                SBC #32
+                SBC #2
                 ; check for collisions and out of screen
-                CMP #32
+                CMP #02
                 BCS PML_DONE
-                LDA #32
+                LDA #02
 
         PML_DONE
-                STA PLAYER_X
-                STA SP15_X_POS_L
+                STA @l PLAYER_X
+                STA @l SP00_X_POS_L
                 RTS
 
 ; *****************************************************************

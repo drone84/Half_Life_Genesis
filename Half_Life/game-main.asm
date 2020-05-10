@@ -64,8 +64,10 @@ RVECTOR_EIRQ    .addr HIRQ     ; FFFE
 
 * = $160000
 
-PLAYER_X    .word 100
-PLAYER_Y    .word 100
+PLAYER_X_MOV .word 0          ; 0: stay where it is,   1: go up,     2: go down
+PLAYER_Y_MOV .word 0          ; 0: stay where it is,   1: go right,  2: goleft
+PLAYER_X     .word 100
+PLAYER_Y     .word 100
 
 game_array  ; the array treats each sprite in order
             ;     speed  X       Y        sprite
@@ -183,11 +185,12 @@ GAME_START
             JSR INIT_DISPLAY
 
             ; Enable SOF
-            ;LDA #~( FNX0_INT00_SOF )
-            ;STA @lINT_MASK_REG0
-            ;LDA #~( FNX1_INT00_KBD )
-            ;STA @lINT_MASK_REG1
-            ;CLI
+            setas
+            LDA #~( FNX0_INT00_SOF )
+            STA @lINT_MASK_REG0
+            LDA #~( FNX1_INT00_KBD )
+            STA @lINT_MASK_REG1
+            CLI
 
     GAME_LOOP
             BRA GAME_LOOP

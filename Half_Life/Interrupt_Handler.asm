@@ -13,20 +13,20 @@ check_irq_bit  .macro
                 BNE END_CHECK
                 STA \1
                 JSR \3
-                
+
 END_CHECK
                 .endm
-                
+
 IRQ_HANDLER
 ; First Block of 8 Interrupts
                 .as
                 setdp 0
-                
+
                 .as
                 LDA #0  ; set the data bank register to 0
                 PHA
                 PLB
-                
+
                 LDA INT_PENDING_REG0
                 BEQ CHECK_PENDING_REG1
 ; Start of Frame
@@ -59,12 +59,12 @@ CHECK_PENDING_REG2
                 setas
                 LDA INT_PENDING_REG2
                 BEQ EXIT_IRQ_HANDLE
-                
+
 ; OPL2 Right Interrupt
                 ;check_irq_bit INT_PENDING_REG2, FNX2_INT00_OPL2R, OPL2R_INTERRUPT
 ; OPL2 Left Interrupt
                 ;check_irq_bit INT_PENDING_REG2, FNX2_INT01_OPL2L, OPL2L_INTERRUPT
-                
+
 EXIT_IRQ_HANDLE
                 ; Exit Interrupt Handler
 
@@ -82,36 +82,40 @@ KEYBOARD_INTERRUPT
                 .as
                 LDA KBD_INPT_BUF        ; Get Scan Code from KeyBoard
                 STA KEYBOARD_SC_TMP     ; Save Code Immediately
-                CMP #$11 ; W key
+        CHECK_W CMP #$11 ; W key
                 BNE CHECK_A
-                LDA #$9E
+                LDA #1
+                STA PLAYER_Y_MOV
                 BRA KBD_DONE
-                
+
         CHECK_A CMP #$1E
                 BNE CHECK_S
-                LDA #$9B
+                LDA #2
+                STA PLAYER_X_MOV
                 BRA KBD_DONE
-                
+
         CHECK_S CMP #$1F
                 BNE CHECK_D
-                LDA #$9D
+                LDA #2
+                STA PLAYER_Y_MOV
                 BRA KBD_DONE
-                
+
         CHECK_D CMP #$20
                 BNE CHECK_SPACE
-                LDA #$97
+                LDA #1
+                STA PLAYER_X_MOV
                 BRA KBD_DONE
-                
+
         CHECK_SPACE
                 CMP #$39
                 BNE SKIP_KEY
                 LDA #$1F
                 BRA KBD_DONE
-                
+
         SKIP_KEY
                 LDA #$9F
         KBD_DONE
-                JSR UPDATE_DISPLAY
+                ;JSR UPDATE_DISPLAY
                 RTS
 ;
 ; ///////////////////////////////////////////////////////////////////
@@ -125,7 +129,7 @@ SOF_INTERRUPT
                 .as
                 LDA JOYSTICK0
                 JSR UPDATE_DISPLAY
-                
+
                 RTS
 
 ;
@@ -143,18 +147,18 @@ MOUSE_INTERRUPT
                 setxs
                 LDX MOUSE_PTR
                 BNE MOUSE_BYTE_GT1
-                
+
                 ; copy the buttons to another address
                 AND #%0111
                 STA MOUSE_BUTTONS_REG
-                
+
     MOUSE_BYTE_GT1
                 PLA
                 STA @lMOUSE_PTR_BYTE0, X
                 INX
                 CPX #$03
                 BNE EXIT_FOR_NEXT_VALUE
-                
+
                 ; Create Absolute Count from Relative Input
                 LDA @lMOUSE_PTR_X_POS_L
                 STA MOUSE_POS_X_LO
@@ -165,28 +169,28 @@ MOUSE_INTERRUPT
                 STA MOUSE_POS_Y_LO
                 LDA @lMOUSE_PTR_Y_POS_H
                 STA MOUSE_POS_Y_HI
-                
-                
+
+
                 ; print the character on the upper-right of the screen
                 ; this is temporary
                 CLC
                 LDA MOUSE_BUTTONS_REG
-                
+
                 JSR MOUSE_BUTTON_HANDLER
-                
+
                 LDX #$00
 EXIT_FOR_NEXT_VALUE
                 STX MOUSE_PTR
 
                 setxl
                 RTS
-                
+
 MOUSE_BUTTON_HANDLER
                 setas
-                
+
                 LDA @lMOUSE_BUTTONS_REG
                 BEQ MOUSE_CLICK_DONE
-                
+
                 ; set the cursor position ( X/8 and Y/8 ) and enable blinking
                 setal
                 CLC
@@ -196,7 +200,7 @@ MOUSE_BUTTON_HANDLER
                 LSR
                 STA CURSORX
                 STA @lVKY_TXT_CURSOR_X_REG_L
-                
+
                 CLC
                 LDA @lMOUSE_PTR_Y_POS_L
                 LSR
@@ -204,11 +208,11 @@ MOUSE_BUTTON_HANDLER
                 LSR
                 STA CURSORY
                 STA @lVKY_TXT_CURSOR_Y_REG_L
-                
+
                 setas
                 LDA #$03      ;Set Cursor Enabled And Flash Rate @1Hz
                 STA @lVKY_TXT_CURSOR_CTRL_REG
-                
+
 MOUSE_CLICK_DONE
                 RTS
 ;
@@ -260,4 +264,3 @@ LPT1_INTERRUPT  .as
 
 NMI_HANDLER
                 RTL
-                

@@ -82,30 +82,63 @@ KEYBOARD_INTERRUPT
                 .as
                 LDA KBD_INPT_BUF        ; Get Scan Code from KeyBoard
                 STA KEYBOARD_SC_TMP     ; Save Code Immediately
+                AND #$7F ; get the key only and remove the pressed or relased state
         CHECK_W CMP #$11 ; W key
                 BNE CHECK_A
+                ;-------------------- W key process ----------------------------
+                LDA KEYBOARD_SC_TMP ; get the original scan code back
+                AND #$80 ; extract the key pressed or relased state
+                CMP #$80
+                BEQ KEY_W_RE
                 LDA #1
                 STA PLAYER_Y_MOV
                 BRA KBD_DONE
-
+      KEY_W_RE  LDA #0
+                STA PLAYER_Y_MOV
+                BRA KBD_DONE
+                ;---------------------------------------------------------------
         CHECK_A CMP #$1E
                 BNE CHECK_S
+                ;-------------------- A key process ----------------------------
+                LDA KEYBOARD_SC_TMP ; get the original scan code back
+                AND #$80 ; extract the key pressed or relased state
+                CMP #$80
+                BEQ KEY_A_RE
                 LDA #2
                 STA PLAYER_X_MOV
                 BRA KBD_DONE
-
+      KEY_A_RE  LDA #0
+                STA PLAYER_X_MOV
+                BRA KBD_DONE
+                ;---------------------------------------------------------------
         CHECK_S CMP #$1F
                 BNE CHECK_D
+                ;-------------------- S key process ----------------------------
+                LDA KEYBOARD_SC_TMP ; get the original scan code back
+                AND #$80 ; extract the key pressed or relased state
+                CMP #$80
+                BEQ KEY_S_RE
                 LDA #2
                 STA PLAYER_Y_MOV
                 BRA KBD_DONE
-
+      KEY_S_RE  LDA #0
+                STA PLAYER_Y_MOV
+                BRA KBD_DONE
+                ;---------------------------------------------------------------
         CHECK_D CMP #$20
                 BNE CHECK_SPACE
+                ;-------------------- D key process ----------------------------
+                LDA KEYBOARD_SC_TMP ; get the original scan code back
+                AND #$80 ; extract the key pressed or relased state
+                CMP #$80
+                BEQ KEY_D_RE
                 LDA #1
                 STA PLAYER_X_MOV
                 BRA KBD_DONE
-
+      KEY_D_RE  LDA #0
+                STA PLAYER_X_MOV
+                BRA KBD_DONE
+                ;---------------------------------------------------------------
         CHECK_SPACE
                 CMP #$39
                 BNE SKIP_KEY

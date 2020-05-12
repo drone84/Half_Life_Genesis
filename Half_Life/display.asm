@@ -282,7 +282,8 @@ LOAD_TILE_MAP_0
                 ; lets comput the ofset to use with LDA
                 ; BRA LOAD_TILE_MAP_0
                 STA @l ADDER_A
-                LDA LOAD_TILE_MAP_0_LDA_INSTR+1
+                LDA #<>game_board_0
+                STA LOAD_TILE_MAP_0_LDA_INSTR+1
                 STA @l ADDER_B
                 LDA @l ADDER_R
                 STA LOAD_TILE_MAP_0_LDA_INSTR+1
@@ -347,10 +348,11 @@ LOAD_TILE_MAP_1
                 ; lets comput the ofset to use with LDA
                 ; BRA LOAD_TILE_MAP_0
                 STA @l ADDER_A
-                LDA LOAD_TILE_MAP_0_LDA_INSTR+1
+                LDA #<>game_board_1
+                STA LOAD_TILE_MAP_1_LDA_INSTR+1
                 STA @l ADDER_B
                 LDA @l ADDER_R
-                STA LOAD_TILE_MAP_0_LDA_INSTR+1
+                STA LOAD_TILE_MAP_1_LDA_INSTR+1
                 ; the 16bits ofset is recomputed
                 LDX #0
                 LDY #0
@@ -624,15 +626,15 @@ PLAYER_MOVE_DOWN
                 CLC
                 ADC #1
                 CMP NB_TILE_MAP_Y
-                BNE PMR_NO_NEED_TO_CLEEP
+                BNE PMD_NO_NEED_TO_CLEEP
                 SEC
                 SBC #1
         PMD_NO_NEED_TO_CLEEP:
                 STA @l CURENT_TILE_MAP_Y;
+                .setal
                 JSR LOAD_TILE_MAP_0
                 .setal
                 JSR LOAD_TILE_MAP_1
-                .setal
                 LDA #2 ;LDA #480 - 32 ; the lowest position on screen
         PMD_DONE
                 STA @l PLAYER_Y
@@ -655,6 +657,7 @@ PLAYER_MOVE_UP
                 LDA #0
        PMU_NO_NEED_TO_CLEEP:
                 STA @l CURENT_TILE_MAP_Y;
+                .setal
                 JSR LOAD_TILE_MAP_0
                 .setal
                 JSR LOAD_TILE_MAP_1
@@ -683,6 +686,7 @@ PLAYER_MOVE_RIGHT
                 SBC #1
        PMR_NO_NEED_TO_CLEEP:
                 STA @l CURENT_TILE_MAP_X;
+                .setal
                 JSR LOAD_TILE_MAP_0
                 .setal
                 JSR LOAD_TILE_MAP_1
@@ -710,6 +714,7 @@ PLAYER_MOVE_LEFT
                 LDA #0
        PLAYER_MOVE_LEFT_NO_NEED_TO_CLEEP:
                 STA @l CURENT_TILE_MAP_X;
+                .setal
                 JSR LOAD_TILE_MAP_0
                 .setal
                 JSR LOAD_TILE_MAP_1
@@ -1130,12 +1135,12 @@ LOAD_TILESET
                 RTS
 
 ; our resolution is 640 x 480 - tiles are 16 x 16 - therefore 40 x 30
-NB_TILE_MAP_X .word 3; will be updatad by the code the day I will load the map from the SD or IDE
-NB_TILE_MAP_Y .word 2
-CURENT_TILE_MAP_X .word 0
-CURENT_TILE_MAP_Y .word 0
+NB_TILE_MAP_X .word $3; will be updatad by the code the day I will load the map from the SD or IDE
+NB_TILE_MAP_Y .word $2
+CURENT_TILE_MAP_X .word $0
+CURENT_TILE_MAP_Y .word $0
 game_board
-* = $160C00
+* = $164C00
 game_board_0
 game_board_0__00_00
 .binary "assets/HL_V2_Tile_map_layer_1__00_00.map"
@@ -1162,16 +1167,16 @@ game_board_0__01_02
 game_board_1
 .binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
 * = game_board_1 + 40*30*1
-.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
+.binary "assets/HL_V2_Tile_map_layer_0__01_00.map"
 * = game_board_1 + 40*30*2
-.binary "assets/HL_V2_Tile_map_layer_0__00_02.map"
+.binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
 
 * = game_board_1 + 40*30*3
-.binary "assets/HL_V2_Tile_map_layer_0__01_00.map"
+.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
 * = game_board_1 + 40*30*4
 .binary "assets/HL_V2_Tile_map_layer_0__01_01.map"
 * = game_board_1 + 40*30*5
-.binary "assets/HL_V2_Tile_map_layer_0__01_02.map"
+.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
 * = game_board_1 + 40*30*6
 
 

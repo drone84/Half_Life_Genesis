@@ -246,12 +246,53 @@ INIT_DISPLAY
 ; *********************************************************
 ; * Copy the Tile map into the tile map register area
 ; *********************************************************
+;NB_TILE_MAP_X = 3
+;NB_TILE_MAP_Y = 2
+;CURENT_TILE_MAP_X = 0
+;CURENT_TILE_MAP_Y = 0
+
 LOAD_TILE_MAP_0
+                .setaxl
+                ; the tile map is saved as:
+                ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
+                ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+                ; @ XX:4B0*X_size*2 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+                ; comput the Y ofset
+                LDA #40*30 ; tile map size
+                STA @l M0_OPERAND_A
+                LDA @l NB_TILE_MAP_X
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT ; we know how many X block we need to skyp to advamce from one line only
+                STA @l M0_OPERAND_A
+                LDA @l CURENT_TILE_MAP_Y
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT ; now we have the Y offset computed
+                TAX
+                ; Comput the ofset in the X direction
+                LDA #40*30 ; tile map size
+                STA @l M0_OPERAND_A
+                LDA @l CURENT_TILE_MAP_X
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT
+                ; add the to ofset to get the addreess of the right map to load
+                STA @l ADDER_A
+                TXA
+                STA @l ADDER_B
+                LDA @l ADDER_R ; now we have the rightr offset in the tile map
+                ; lets comput the ofset to use with LDA
+                ; BRA LOAD_TILE_MAP_0
+                STA @l ADDER_A
+                LDA LOAD_TILE_MAP_0_LDA_INSTR+1
+                STA @l ADDER_B
+                LDA @l ADDER_R
+                STA LOAD_TILE_MAP_0_LDA_INSTR+1
+                ; the 16bits ofset is recomputed
                 LDX #0
                 LDY #0
                 setdbr $AF
                 setas
     GET_TILE_0
+    LOAD_TILE_MAP_0_LDA_INSTR:
                 LDA game_board_0,X
                 STA TILE_MAP0,Y
                 INY
@@ -276,11 +317,47 @@ LOAD_TILE_MAP_0
 ; * Copy the Tile map into the tile map register area
 ; *********************************************************
 LOAD_TILE_MAP_1
+.setaxl
+                ; the tile map is saved as:
+                ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
+                ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+                ; @ XX:4B0*X_size*2 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+                ; comput the Y ofset
+                LDA #40*30 ; tile map size
+                STA @l M0_OPERAND_A
+                LDA @l NB_TILE_MAP_X
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT ; we know how many X block we need to skyp to advamce from one line only
+                STA @l M0_OPERAND_A
+                LDA @l CURENT_TILE_MAP_Y
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT ; now we have the Y offset computed
+                TAX
+                ; Comput the ofset in the X direction
+                LDA #40*30 ; tile map size
+                STA @l M0_OPERAND_A
+                LDA @l CURENT_TILE_MAP_X
+                STA @l M0_OPERAND_B
+                LDA @l M0_RESULT
+                ; add the to ofset to get the addreess of the right map to load
+                STA @l ADDER_A
+                TXA
+                STA @l ADDER_B
+                LDA @l ADDER_R ; now we have the rightr offset in the tile map
+                ; lets comput the ofset to use with LDA
+                ; BRA LOAD_TILE_MAP_0
+                STA @l ADDER_A
+                LDA LOAD_TILE_MAP_0_LDA_INSTR+1
+                STA @l ADDER_B
+                LDA @l ADDER_R
+                STA LOAD_TILE_MAP_0_LDA_INSTR+1
+                ; the 16bits ofset is recomputed
                 LDX #0
                 LDY #0
                 setdbr $AF
                 setas
     GET_TILE_1
+    LOAD_TILE_MAP_1_LDA_INSTR:
                 LDA game_board_1,X
                 STA TILE_MAP1,Y
                 INY
@@ -542,8 +619,21 @@ PLAYER_MOVE_DOWN
                 ; check for collisions and out of screen
                 CMP #480 - 32
                 BCC PMD_DONE
-                LDA #480 - 32 ; the lowest position on screen
-
+                ; load the new tile map and replace the player
+                LDA @l CURENT_TILE_MAP_Y;
+                CLC
+                ADC #1
+                CMP NB_TILE_MAP_Y
+                BNE PMR_NO_NEED_TO_CLEEP
+                SEC
+                SBC #1
+        PMD_NO_NEED_TO_CLEEP:
+                STA @l CURENT_TILE_MAP_Y;
+                JSR LOAD_TILE_MAP_0
+                .setal
+                JSR LOAD_TILE_MAP_1
+                .setal
+                LDA #2 ;LDA #480 - 32 ; the lowest position on screen
         PMD_DONE
                 STA @l PLAYER_Y
                 STA @l SP00_Y_POS_L
@@ -556,7 +646,20 @@ PLAYER_MOVE_UP
                 ; check for collisions and out of screen
                 CMP #02
                 BCS PMU_DONE
-                LDA #02
+                ; load the new tile map and replace the player
+                LDA @l CURENT_TILE_MAP_Y;
+                SEC
+                SBC #1
+                CMP #$FFFF
+                BNE PMU_NO_NEED_TO_CLEEP
+                LDA #0
+       PMU_NO_NEED_TO_CLEEP:
+                STA @l CURENT_TILE_MAP_Y;
+                JSR LOAD_TILE_MAP_0
+                .setal
+                JSR LOAD_TILE_MAP_1
+                .setal
+                LDA #480 - 32; LDA #02
 
         PMU_DONE
                 STA @l PLAYER_Y
@@ -570,7 +673,21 @@ PLAYER_MOVE_RIGHT
                 ; check for collisions and out of screen
                 CMP #640-16
                 BCC PMR_DONE
-                LDA #640-16 ; the lowest position on screen
+                ; load the new tile map and replace the player
+                LDA @l CURENT_TILE_MAP_X;
+                CLC
+                ADC #1
+                CMP NB_TILE_MAP_X
+                BNE PMR_NO_NEED_TO_CLEEP
+                SEC
+                SBC #1
+       PMR_NO_NEED_TO_CLEEP:
+                STA @l CURENT_TILE_MAP_X;
+                JSR LOAD_TILE_MAP_0
+                .setal
+                JSR LOAD_TILE_MAP_1
+                .setal
+                LDA #2 ;LDA #640-16 ; the lowest position on screen
 
         PMR_DONE
                 STA @l PLAYER_X
@@ -584,7 +701,20 @@ PLAYER_MOVE_LEFT
                 ; check for collisions and out of screen
                 CMP #02
                 BCS PML_DONE
-                LDA #02
+                ; load the new tile map and replace the player
+                LDA @l CURENT_TILE_MAP_X;
+                SEC
+                SBC #1
+                CMP #$FFFF
+                BNE PLAYER_MOVE_LEFT_NO_NEED_TO_CLEEP
+                LDA #0
+       PLAYER_MOVE_LEFT_NO_NEED_TO_CLEEP:
+                STA @l CURENT_TILE_MAP_X;
+                JSR LOAD_TILE_MAP_0
+                .setal
+                JSR LOAD_TILE_MAP_1
+                .setal
+                LDA #640 - 32; LDA #02
 
         PML_DONE
                 STA @l PLAYER_X
@@ -1000,43 +1130,49 @@ LOAD_TILESET
                 RTS
 
 ; our resolution is 640 x 480 - tiles are 16 x 16 - therefore 40 x 30
+NB_TILE_MAP_X .word 3; will be updatad by the code the day I will load the map from the SD or IDE
+NB_TILE_MAP_Y .word 2
+CURENT_TILE_MAP_X .word 0
+CURENT_TILE_MAP_Y .word 0
 game_board
+* = $160C00
 game_board_0
+game_board_0__00_00
 .binary "assets/HL_V2_Tile_map_layer_1__00_00.map"
+* = game_board_0 + 40*30*1
+game_board_0__00_01
+.binary "assets/HL_V2_Tile_map_layer_1__00_01.map"
+* = game_board_0 + 40*30*2
+game_board_0__00_02
+.binary "assets/HL_V2_Tile_map_layer_1__00_02.map"
+
+* = game_board_0 + 40*30*3
+game_board_0__01_00
+.binary "assets/HL_V2_Tile_map_layer_1__01_00.map"
+* = game_board_0 + 40*30*4
+game_board_0__01_01
+.binary "assets/HL_V2_Tile_map_layer_1__01_01.map"
+* = game_board_0 + 40*30*5
+game_board_0__01_02
+.binary "assets/HL_V2_Tile_map_layer_1__01_02.map"
+
+
+
+* = game_board_0 + 40*30*6
 game_board_1
 .binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
+* = game_board_1 + 40*30*1
+.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
+* = game_board_1 + 40*30*2
+.binary "assets/HL_V2_Tile_map_layer_0__00_02.map"
 
-
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0D,$0E,$0F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$1A,$1B,$1C,$1D,$1E,$1F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$2A,$2B,$2C,$2D,$2E,$2F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$3A,$3B,$3C,$3D,$3E,$3F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte $78,$00,$00,$00,$00,$00,$00,$00,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$4A,$4B,$4C,$4D,$4E,$4F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte $78,$00,$00,$00,$00,$00,$00,$00,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$5A,$5B,$5C,$5D,$5E,$5F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte $78,$00,$00,$00,$00,$00,$00,$00,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$6A,$6B,$6C,$6D,$6E,$6F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$7A,$7B,$7C,$7D,$7E,$7F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,6
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-                .byte 3,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+* = game_board_1 + 40*30*3
+.binary "assets/HL_V2_Tile_map_layer_0__01_00.map"
+* = game_board_1 + 40*30*4
+.binary "assets/HL_V2_Tile_map_layer_0__01_01.map"
+* = game_board_1 + 40*30*5
+.binary "assets/HL_V2_Tile_map_layer_0__01_02.map"
+* = game_board_1 + 40*30*6
 
 
 PALETTE

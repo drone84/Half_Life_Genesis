@@ -99,13 +99,16 @@ GAME_START
             STA @lINT_EDGE_REG0
             STA @lINT_EDGE_REG1
             STA @lINT_EDGE_REG2
+            STA @lINT_EDGE_REG3
 
             ; Mask all Interrupt @ This Point
             LDA #$FF
-            STA @lINT_MASK_REG0
-            STA @lINT_MASK_REG1
-            STA @lINT_MASK_REG2
-
+            STA @l INT_MASK_REG0
+            STA @l INT_MASK_REG1
+            STA @l INT_MASK_REG2
+            STA @l INT_MASK_REG3
+            LDA #$00
+            ;STA @l INT_MASK_REG3
             ;-------------------------------------------------------
             ;-- Extract the backgroubd pixel from the BMP picture --
             ;-------------------------------------------------------
@@ -213,12 +216,21 @@ GAME_START
 
             ; Enable SOF
             setas
-            LDA #~( FNX0_INT00_SOF ) ; Start of Frame
-            STA @lINT_MASK_REG0
-            LDA #~( FNX1_INT00_KBD ) ; Keyboard
-            STA @lINT_MASK_REG1
-            ;LDA #~( FNX0_INT01_SOL ) ; Start of Line
-            ;STA @lINT_MASK_REG0
+            LDA @l INT_MASK_REG0
+            AND #~( FNX0_INT00_SOF ); Start of Frame
+            STA @l INT_MASK_REG0
+
+            LDA @l INT_MASK_REG0
+            AND #~( FNX0_INT01_SOL ) ; Start of Line
+            STA @l INT_MASK_REG0
+
+            LDA @l INT_MASK_REG0
+            AND #~( FNX1_INT00_KBD ) ; Keyboard
+            STA @l INT_MASK_REG1
+
+            ;LDA #~( FNX1_INT00_KBD ) ; Keyboard
+            ;STA @l INT_MASK_REG1
+
 
             CLI
 
@@ -229,3 +241,4 @@ GAME_START
 .include "Kernel_lib.asm"
 .include "interrupt_handler.asm"
 .include "display.asm"
+.include "menu_display.asm"

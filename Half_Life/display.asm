@@ -28,7 +28,7 @@ INIT_DISPLAY
                 STA BORDER_CTRL_REG
 
                 ; enable graphics, tiles and sprites display
-                LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
+                LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En; + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
                 STA MASTER_CTRL_REG_L
 
                 ; display intro screen
@@ -260,6 +260,10 @@ INIT_DISPLAY
                 STA SP15_CONTROL_REG
                 STA SP16_CONTROL_REG
                 .setal
+                LDA #64
+                STA SPRIT_X_SCREEN_START
+                LDA #150
+                STA SPRIT_Y_SCREEN_START
 
                 ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
                 ;---------------------- B6
@@ -352,6 +356,7 @@ INIT_DISPLAY
                 STA SP00_X_POS_L
                 LDA PLAYER_Y
                 STA SP00_Y_POS_L
+
                 ; active the sprit 0
                 LDA #SPRITE_Enable +$04
                 STA SP00_CONTROL_REG
@@ -504,12 +509,12 @@ LOAD_TILE_MAP_1
                 BNE GET_TILE_1
                 RTS
 ; *************************************************************
-;
+; Load tiled sprite in VRAM
 ; *************************************************************
 ; input
-SPRIT_SIZE_TILE_X .word $0 ; the picture size in pixel
+SPRIT_SIZE_TILE_X .word $0 ; the size of the pictur in pixel
 SPRIT_SIZE_TILE_Y .word $0
-SPRIT_SRC .dword 0        ; address were to get and load the sata
+SPRIT_SRC .dword 0        ; address where to get and load the sata
 SPRIT_DES .dword 0
 
 ; variable to reset / set every time the function is used

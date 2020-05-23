@@ -34,7 +34,7 @@ IRQ_HANDLER
 ; Start of Frame
                 check_irq_bit INT_PENDING_REG0, FNX0_INT00_SOF, SOF_INTERRUPT
 ; Start of line
-                check_irq_bit INT_PENDING_REG0, FNX0_INT01_SOL, SOL_INTERRUPT
+                ;check_irq_bit INT_PENDING_REG0, FNX0_INT01_SOL, SOL_INTERRUPT
 ; Timer 0
                 ;check_irq_bit INT_PENDING_REG0, FNX0_INT02_TMR0, TIMER0_INTERRUPT
 ; FDC Interrupt

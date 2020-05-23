@@ -205,7 +205,7 @@ SOF_INTERRUPT
                 LDA @l $000064
                 CLC
                 ADC #64
-                CMP #150+150*4
+                CMP #150+150*1-1
                 BMI no_clipping_4
                 LDA #150
   no_clipping_4:  STA @l $000064

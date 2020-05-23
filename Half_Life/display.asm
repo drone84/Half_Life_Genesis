@@ -136,6 +136,130 @@ INIT_DISPLAY
                 LDA #$0400 ; 32 * 32
                 MVN <`SPRIT_GORDON_SCIENTIST_PIXEL,$B1
 
+                ;-----------------------------------------------------------------
+                ;Load the menue graphics
+                ;---------------------- B2
+                setaxl
+                LDA #256
+                STA @l SPRIT_SIZE_TILE_X
+                LDA #64
+                STA @l SPRIT_SIZE_TILE_Y
+                LDA#<>MENU_PLAY + $80000
+                STA @l SPRIT_SRC
+                LDA #`MENU_PLAY + $80000
+                STA @l SPRIT_SRC+2
+                LDA #$0000
+                STA @l SPRIT_DES
+                LDA #$00B2
+                STA @l SPRIT_DES+2
+                JSR LOAD_TILED_SPRITES
+                .setas
+
+
+                LDA #02
+                STA SP01_ADDY_PTR_H
+                STA SP02_ADDY_PTR_H
+                STA SP03_ADDY_PTR_H
+                STA SP04_ADDY_PTR_H
+                STA SP05_ADDY_PTR_H
+                STA SP06_ADDY_PTR_H
+                STA SP07_ADDY_PTR_H
+                STA SP08_ADDY_PTR_H
+                STA SP09_ADDY_PTR_H
+                STA SP10_ADDY_PTR_H
+                STA SP11_ADDY_PTR_H
+                STA SP12_ADDY_PTR_H
+                STA SP13_ADDY_PTR_H
+                STA SP14_ADDY_PTR_H
+                STA SP15_ADDY_PTR_H
+                STA SP16_ADDY_PTR_H
+
+                ; write the position of the sprit on the screen (640x480)
+                .setal
+                LDA #$0
+                STA SP01_X_POS_L
+                LDA #$0
+                STA SP01_Y_POS_L
+                LDA #$20
+                STA SP02_X_POS_L
+                LDA #$0
+                STA SP02_Y_POS_L
+                LDA #$40
+                STA SP03_X_POS_L
+                LDA #$0
+                STA SP03_Y_POS_L
+                LDA #$60
+                STA SP04_X_POS_L
+                LDA #0
+                STA SP04_Y_POS_L
+                LDA #$80
+                STA SP05_X_POS_L
+                LDA #$0
+                STA SP05_Y_POS_L
+                LDA #$A0
+                STA SP06_X_POS_L
+                LDA #$0
+                STA SP06_Y_POS_L
+                LDA #$C0
+                STA SP07_X_POS_L
+                LDA #0
+                STA SP07_Y_POS_L
+                LDA #$E0
+                STA SP08_X_POS_L
+                LDA #0
+                STA SP08_Y_POS_L
+        				LDA #$0
+                STA SP09_X_POS_L
+                LDA #$20
+                STA SP09_Y_POS_L
+                LDA #$20
+                STA SP10_X_POS_L
+                LDA #$20
+                STA SP10_Y_POS_L
+                LDA #$40
+                STA SP11_X_POS_L
+                LDA #$20
+                STA SP11_Y_POS_L
+                LDA #$60
+                STA SP12_X_POS_L
+                LDA #$20
+                STA SP12_Y_POS_L
+                LDA #$80
+                STA SP13_X_POS_L
+                LDA #$20
+                STA SP13_Y_POS_L
+                LDA #$A0
+                STA SP14_X_POS_L
+                LDA #$20
+                STA SP14_Y_POS_L
+                LDA #$C0
+                STA SP15_X_POS_L
+                LDA #$20
+                STA SP15_Y_POS_L
+                LDA #$E0
+                STA SP16_X_POS_L
+                LDA #$20
+                STA SP16_Y_POS_L
+
+                .setas
+                LDA #SPRITE_Enable +$00
+                STA SP01_CONTROL_REG
+                STA SP02_CONTROL_REG
+                STA SP03_CONTROL_REG
+                STA SP04_CONTROL_REG
+                STA SP05_CONTROL_REG
+                STA SP06_CONTROL_REG
+                STA SP07_CONTROL_REG
+                STA SP08_CONTROL_REG
+                STA SP09_CONTROL_REG
+                STA SP10_CONTROL_REG
+                STA SP11_CONTROL_REG
+                STA SP12_CONTROL_REG
+                STA SP13_CONTROL_REG
+                STA SP14_CONTROL_REG
+                STA SP15_CONTROL_REG
+                STA SP16_CONTROL_REG
+                .setal
 
                 ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
                 ;---------------------- B6
@@ -318,7 +442,7 @@ LOAD_TILE_MAP_0
 ; * Copy the Tile map into the tile map register area
 ; *********************************************************
 LOAD_TILE_MAP_1
-.setaxl
+                .setaxl
                 ; the tile map is saved as:
                 ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
                 ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
@@ -378,6 +502,147 @@ LOAD_TILE_MAP_1
                 INX
                 CPX #(640/16) * (480 / 16)
                 BNE GET_TILE_1
+                RTS
+; *************************************************************
+;
+; *************************************************************
+; input
+SPRIT_SIZE_TILE_X .word $0 ; the picture size in pixel
+SPRIT_SIZE_TILE_Y .word $0
+SPRIT_SRC .dword 0        ; address were to get and load the sata
+SPRIT_DES .dword 0
+
+; variable to reset / set every time the function is used
+CURENT_SPRIT_X_LINE .word 0 ; curent line beeing copyed, it gos from 0 to 31
+
+SPRIT_NB_TILE_X .word $0  ; the number of Sprit. SPRIT_SIZE_TILE/32
+SPRIT_NB_TILE_Y .word $0
+SPRIT_X_LEFT .word 0
+SPRIT_Y_LEFT .word 0
+
+SPRIT_X_TEMP .word $0  ; Will save the previous X position where we started the copy the data
+
+LOAD_TILED_SPRITES
+                ;---------------------------------------------------------------
+                ; reset variable
+                ;---------------------------------------------------------------
+                .setaxl
+                LDA #0
+                STA @l CURENT_SPRIT_X_LINE
+                ; set sprit X size so we can jump from one x line to an other one
+                LDA @l SPRIT_SIZE_TILE_X
+                STA @l LOAD_TILED_SPRITES_ADC_1+1
+                LSR
+                LSR
+                LSR
+                LSR
+                LSR
+                STA @l SPRIT_NB_TILE_X ; constant needed to reset CURENT_SPRIT_X when the first line of sprit is copyed
+                STA @l SPRIT_X_LEFT
+                ; set sprit Y size so we can jump from one x line to an other one
+                LDA @l SPRIT_SIZE_TILE_Y
+                LSR
+                LSR
+                LSR
+                LSR
+                LSR
+                STA @l SPRIT_NB_TILE_Y
+                STA @l SPRIT_Y_LEFT
+                ;---------------------------------------------------------------
+                ; set the source and destination page of the sprit
+                ;---------------------------------------------------------------
+                setas
+                LDA @l SPRIT_SRC+2
+                STA @l LOAD_TILED_SPRITES_NVM +2
+                LDA @l SPRIT_DES+2
+                STA @l LOAD_TILED_SPRITES_NVM +1
+                setal
+                ;---------------------------------------------------------------
+                ; load the address low of the sprit
+                ;---------------------------------------------------------------
+                LDA @l SPRIT_SRC
+                TAX
+                LDA @l SPRIT_DES
+                TAY
+
+                ;---------------------------------------------------------------
+                ;---------------------------------------------------------------
+                ;---------------------------------------------------------------
+                ;---------------------------------------------------------------
+                ;---------------------------------------------------------------
+    LOAD_TILED_SPRITES__CPY_X_LINE:
+                TXA
+                STA @l SPRIT_X_TEMP
+                LDA #32-1 ; load the single sprit size
+
+        LOAD_TILED_SPRITES_NVM:
+                MVN 00,#$B0
+                ;---------------------------------------------------------------
+                ;------------------ update the  buffer address -----------------
+                ;---------------------------------------------------------------
+                ;------ Source
+                ;TXA
+                LDA @l SPRIT_X_TEMP ; save the previous X position so if we have to load the next line we just need to do Xpos +32 and we have the next address to copy from
+                CLC
+        LOAD_TILED_SPRITES_ADC_1:
+                ADC #$CAFE ; the value CAFE need to be changed to the sprit x size !!! evey loop the source buffer point to the next line
+                TAX
+                ;------ Destination, just need to be incremented by 32 every time
+                ;;TYA
+              ;;  CLC
+                ;;ADC #32 ;
+              ;;  TAY
+                ;---------------------------------------------------------------
+                ; test if all the sprit line is copyed
+                ;---------------------------------------------------------------
+                LDA @l CURENT_SPRIT_X_LINE
+                INC A
+                CMP #32
+                STA @l CURENT_SPRIT_X_LINE
+                BNE LOAD_TILED_SPRITES__CPY_X_LINE
+                ;---------------------------------------------------------------
+                ; reset the line counter
+                ;---------------------------------------------------------------
+                LDA #0
+                STA @l CURENT_SPRIT_X_LINE
+                ;---------------------------------------------------------------
+                ; update the x ofset to copy the next sprit
+                ; so we are readding the next sprit
+                LDA @l SPRIT_SRC
+                CLC
+                ADC #32 ; get the next sprit
+                STA @l SPRIT_SRC
+                TAX
+                ; no need to update the destination buffer at is automaticaly incremented by 32
+                ;---------------------------------------------------------------
+                ; test if we stilll have sprit on the curent line
+                ;---------------------------------------------------------------
+                LDA @l SPRIT_X_LEFT
+                DEC A
+                STA @l SPRIT_X_LEFT
+                CMP #0
+                BNE LOAD_TILED_SPRITES__CPY_X_LINE
+                ;---------------------------------------------------------------
+                ; get the previous X adress and add 32 so we are pointing to the next line
+                ;---------------------------------------------------------------
+                LDA @l SPRIT_X_TEMP
+                CLC
+                ADC #32 ; get the next sprit
+                STA @l SPRIT_SRC ; save the address of the new line of sprit to copy
+                TAX
+                ;---------------------------------------------------------------
+                ; Reset the X sprit counter wo we are copying a new line of X sprit
+                ;---------------------------------------------------------------
+                LDA @l SPRIT_NB_TILE_X
+                STA @l SPRIT_X_LEFT
+                ;---------------------------------------------------------------
+                ; test if we stilll have a new line to copy
+                ;---------------------------------------------------------------
+                LDA @l SPRIT_Y_LEFT
+                DEC A
+                STA @l SPRIT_Y_LEFT
+                CMP #0
+                BNE LOAD_TILED_SPRITES__CPY_X_LINE
                 RTS
 ; *************************************************************
 ;
@@ -1181,7 +1446,8 @@ game_board_1
 
 
 PALETTE
-.binary "assets/halflife.pal"
+.binary "assets/menu/HLC256_Menu.pal"
+;.binary "assets/halflife.pal"
 PALETTE_TILE_SET_LEVEL_0
 .binary "assets/HL_V2_tile_shifted_256.data.pal"
 ;.binary "assets/HL_V2_tile_set_256.pal"HL_V2_tile_shifted_256.data
@@ -1223,6 +1489,28 @@ SPRIT_GORDON_SCIENTIST_PAL
 ;.binary "assets/halflife_5.pixel"
 * = $200000
 HL_BMP
-.binary "assets/halflife.bmp"
-* = HL_BMP + $50000
+.binary "assets/menu/menu_main.bmp"
+;.binary "assets/halflife.bmp"
+* = $250000
+MENU_PLAY
+.binary "assets/menu/menu_play-select.bmp"
+MENU_PLAY_SELECTED
+.binary "assets/menu/menu_play-select.bmp"
+MENU_LOAD
+.binary "assets/menu/menu_load.bmp"
+* = $260000
+MENU_LOAD_SELECTED
+.binary "assets/menu/menu_load-select.bmp"
+MENU_OPSIONS
+.binary "assets/menu/menu_options.bmp"
+MENU_OPSIONS_SELECTED
+.binary "assets/menu/menu_options-select.bmp"
+* = $270000
+MENU_CREDIT
+.binary "assets/menu/menu_credits.bmp"
+MENU_CREDIT_SELECTED
+.binary "assets/menu/menu_credits-select.bmp"
+
+
+* = HL_BMP + $80000
 HL_PIXEL

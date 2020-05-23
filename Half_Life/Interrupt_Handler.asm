@@ -26,11 +26,15 @@ IRQ_HANDLER
                 LDA #0  ; set the data bank register to 0
                 PHA
                 PLB
-
+                LDA SP01_ADDY_PTR_L
+                inc A
+                STA SP01_ADDY_PTR_L
                 LDA INT_PENDING_REG0
                 BEQ CHECK_PENDING_REG1
 ; Start of Frame
                 check_irq_bit INT_PENDING_REG0, FNX0_INT00_SOF, SOF_INTERRUPT
+; Start of line
+                check_irq_bit INT_PENDING_REG0, FNX0_INT01_SOL, SOL_INTERRUPT
 ; Timer 0
                 ;check_irq_bit INT_PENDING_REG0, FNX0_INT02_TMR0, TIMER0_INTERRUPT
 ; FDC Interrupt
@@ -165,6 +169,22 @@ SOF_INTERRUPT
 
                 RTS
 
+;
+; ///////////////////////////////////////////////////////////////////
+; ///
+; /// Start of Line (Programmable)
+; ///
+; ///
+; ///////////////////////////////////////////////////////////////////
+SOL_INTERRUPT
+
+                .as
+                LDA @l $300000
+                INC A
+                STA @l $300000
+                JSR UPDATE_DISPLAY
+
+                RTS
 ;
 ; ///////////////////////////////////////////////////////////////////
 ; ///

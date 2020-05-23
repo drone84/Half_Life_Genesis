@@ -182,14 +182,44 @@ GAME_START
             ; of the picture resolution whide*hight*bpp (byte per pixel)
             ; JSL IBMP_PARSER dosent seam to work on 32*32
 
+            ;-------------------------------------------------------
+            ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
+            ;-------------------------------------------------------
+            setas
+            setxl
+            LDA #0
+            STA BMP_POSITION_X
+            STA BMP_POSITION_Y
+            ; load the BMP file source adressv and BMP decoded destination address
+            LDA #>MENU_PLAY        ; TILES_NB[0]
+            STA BMP_PRSE_SRC_PTR
+            STA BMP_PRSE_DST_PTR
+
+            LDA #<MENU_PLAY        ; TILES_NB[1]
+            STA BMP_PRSE_SRC_PTR+1
+            STA BMP_PRSE_DST_PTR+1
+
+            LDA #`MENU_PLAY        ; TILES_NB[2]
+            STA BMP_PRSE_SRC_PTR+2
+            LDA #`MENU_PLAY + $80000 ; write the result on the next page
+            STA BMP_PRSE_DST_PTR+2
+
+            ; Parse the BMP file to extract the data in a Byte array
+            ; of the picture resolution whide*hight*bpp (byte per pixel)
+            JSL IBMP_PARSER
+
+
             JSR INIT_DISPLAY
 
             ; Enable SOF
             setas
-            LDA #~( FNX0_INT00_SOF )
+            LDA #~( FNX0_INT00_SOF ) ; Start of Frame
             STA @lINT_MASK_REG0
-            LDA #~( FNX1_INT00_KBD )
+            LDA #~( FNX1_INT00_KBD ) ; Keyboard
             STA @lINT_MASK_REG1
+            ;LDA #~( FNX0_INT01_SOL ) ; Start of Line
+            ;STA @lINT_MASK_REG0
+
             CLI
 
     GAME_LOOP

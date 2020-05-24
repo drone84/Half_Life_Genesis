@@ -109,108 +109,33 @@ GAME_START
             STA @l INT_MASK_REG3
             LDA #$00
             ;STA @l INT_MASK_REG3
-            ;-------------------------------------------------------
-            ;-- Extract the backgroubd pixel from the BMP picture --
-            ;-------------------------------------------------------
-            LDA #0
-            STA BMP_POSITION_X
-            STA BMP_POSITION_Y
-            ; load the BMP file source adressv and BMP decoded destination address
-            LDA #>HL_BMP        ; TILES_NB[0]
-            STA BMP_PRSE_SRC_PTR
-            STA BMP_PRSE_DST_PTR
 
-            LDA #<HL_BMP        ; TILES_NB[1]
-            STA BMP_PRSE_SRC_PTR+1
-            STA BMP_PRSE_DST_PTR+1
+            JSR CLEAR_VRAM_B0_BA
 
-            LDA #`HL_BMP        ; TILES_NB[2]
-            STA BMP_PRSE_SRC_PTR+2
-            LDA #`HL_PIXEL ; write the result on the next page
-            STA BMP_PRSE_DST_PTR+2
+            JSR LOAD_MAIN_MENU
 
-            ; Parse the BMP file to extract the data in a Byte array
-            ; of the picture resolution whide*hight*bpp (byte per pixel)
-            JSL IBMP_PARSER
-
-            ;-------------------------------------------------------
-            ;- Extract the tile level 0 pixel from the BMP picture -
-            ;-------------------------------------------------------
             setas
-            setxl
+            ; diable the border
             LDA #0
-            STA BMP_POSITION_X
-            STA BMP_POSITION_Y
-            ; load the BMP file source adressv and BMP decoded destination address
-            LDA #>TILE_SET_LEVEL_1_BMP        ; TILES_NB[0]
-            STA BMP_PRSE_SRC_PTR
-            STA BMP_PRSE_DST_PTR
+            STA BORDER_CTRL_REG
+            ; enable graphics, tiles and sprites display
+            LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En; + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
+            STA MASTER_CTRL_REG_L
 
-            LDA #<TILE_SET_LEVEL_1_BMP        ; TILES_NB[1]
-            STA BMP_PRSE_SRC_PTR+1
-            STA BMP_PRSE_DST_PTR+1
+            ; Enable SOF
+            .setas
 
-            LDA #`TILE_SET_LEVEL_1_BMP        ; TILES_NB[2]
-            STA BMP_PRSE_SRC_PTR+2
-            LDA #`TILE_SET_LEVEL_0_PIXEL ; write the result on the next page
-            STA BMP_PRSE_DST_PTR+2
+            LDA @l INT_MASK_REG0
+            AND #~( FNX0_INT00_SOF ); Start of Frame
+            STA @l INT_MASK_REG0
 
-            ; Parse the BMP file to extract the data in a Byte array
-            ; of the picture resolution whide*hight*bpp (byte per pixel)
-            JSL IBMP_PARSER
+            LDA @l INT_MASK_REG0
+            AND #~( FNX0_INT07_MOUSE ) ; Mouse
+            STA @l INT_MASK_REG0
 
-            ;-------------------------------------------------------
-            ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
-            ;-------------------------------------------------------
-            setas
-            setxl
-            LDA #0
-            STA BMP_POSITION_X
-            STA BMP_POSITION_Y
-            ; load the BMP file source adressv and BMP decoded destination address
-            LDA #>SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[0]
-            STA BMP_PRSE_SRC_PTR
-            STA BMP_PRSE_DST_PTR
+            CLI ; active the Interrupt
 
-            LDA #<SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[1]
-            STA BMP_PRSE_SRC_PTR+1
-            STA BMP_PRSE_DST_PTR+1
-
-            LDA #`SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[2]
-            STA BMP_PRSE_SRC_PTR+2
-            LDA #`SPRIT_GORDON_SCIENTIST_PIXEL ; write the result on the next page
-            STA BMP_PRSE_DST_PTR+2
-
-            ; Parse the BMP file to extract the data in a Byte array
-            ; of the picture resolution whide*hight*bpp (byte per pixel)
-            ; JSL IBMP_PARSER dosent seam to work on 32*32
-
-            ;-------------------------------------------------------
-            ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
-            ;-------------------------------------------------------
-            setas
-            setxl
-            LDA #0
-            STA BMP_POSITION_X
-            STA BMP_POSITION_Y
-            ; load the BMP file source adressv and BMP decoded destination address
-            LDA #>MENU_PLAY        ; TILES_NB[0]
-            STA BMP_PRSE_SRC_PTR
-            STA BMP_PRSE_DST_PTR
-
-            LDA #<MENU_PLAY        ; TILES_NB[1]
-            STA BMP_PRSE_SRC_PTR+1
-            STA BMP_PRSE_DST_PTR+1
-
-            LDA #`MENU_PLAY        ; TILES_NB[2]
-            STA BMP_PRSE_SRC_PTR+2
-            LDA #`MENU_PLAY + $80000 ; write the result on the next page
-            STA BMP_PRSE_DST_PTR+2
-
-            ; Parse the BMP file to extract the data in a Byte array
-            ; of the picture resolution whide*hight*bpp (byte per pixel)
-            JSL IBMP_PARSER
-
+            BRA GAME_LOOP
 
             JSR INIT_DISPLAY
 
@@ -225,20 +150,22 @@ GAME_START
             STA @l INT_MASK_REG0
 
             LDA @l INT_MASK_REG0
+            AND #~( FNX0_INT07_MOUSE ) ; Mouse
+            STA @l INT_MASK_REG0
+
+            LDA @l INT_MASK_REG0
             AND #~( FNX1_INT00_KBD ) ; Keyboard
             STA @l INT_MASK_REG1
 
             ;LDA #~( FNX1_INT00_KBD ) ; Keyboard
             ;STA @l INT_MASK_REG1
 
-
             CLI
 
     GAME_LOOP
             BRA GAME_LOOP
-
+.include "menu_display.asm"
 .include "BMP_Lib.asm"
 .include "Kernel_lib.asm"
 .include "interrupt_handler.asm"
 .include "display.asm"
-.include "menu_display.asm"

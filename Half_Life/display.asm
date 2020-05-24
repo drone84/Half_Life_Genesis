@@ -33,71 +33,8 @@ INIT_DISPLAY
 
                 ; display intro screen
                 ; wait for user to press a key or joystick button
-
-
-                setaxl
-                LDX #<>$0
-
-                LDX #<>$0
-                LDA #$0
-              erase_Byte_00:
-                STA @l $B00000,x
-                INX
-                CPX #0
-                BNE erase_Byte_00
-              erase_Byte_01:
-                STA @l $B10000,x
-                INX
-                CPX #0
-                BNE erase_Byte_01
-              erase_Byte_02:
-                STA @l $B20000,x
-                INX
-                CPX #0
-                BNE erase_Byte_02
-              erase_Byte_03:
-                STA @l $B30000,x
-                INX
-                CPX #0
-                BNE erase_Byte_03
-              erase_Byte_04:
-                STA @l $B40000,x
-                INX
-                CPX #0
-                BNE erase_Byte_04
-              erase_Byte_05:
-                STA @l $B50000,x
-                INX
-                CPX #0
-                BNE erase_Byte_05
-              erase_Byte_06:
-                STA @l $B60000,x
-                INX
-                CPX #0
-                BNE erase_Byte_06
-              erase_Byte_07:
-                STA @l $B70000,x
-                INX
-                CPX #0
-                BNE erase_Byte_07
-              erase_Byte_08:
-                STA @l $B80000,x
-                INX
-                CPX #0
-                BNE erase_Byte_08
-              erase_Byte_09:
-                STA @l $B90000,x
-                INX
-                CPX #0
-                BNE erase_Byte_09
-              erase_Byte_0A:
-                STA @l $BA0000,x
-                INX
-                CPX #0
-                BNE erase_Byte_0A
-
-
-                setaxl
+RTS
+                .setaxl
                 ; load LUT
                 LDX #<>PALETTE
                 LDY #<>GRPH_LUT0_PTR
@@ -108,7 +45,7 @@ INIT_DISPLAY
                 LDY #<>GRPH_LUT1_PTR
                 LDA #1024
                 MVN <`PALETTE,<`GRPH_LUT1_PTR
-
+RTS
                 LDX #<>PALETTE_TILE_SET_LEVEL_0
                 LDY #<>GRPH_LUT2_PTR
                 LDA #1024
@@ -118,6 +55,7 @@ INIT_DISPLAY
                 LDY #<>GRPH_LUT3_PTR
                 LDA #1024
                 MVN <`SPRIT_GORDON_SCIENTIST_PAL,<`GRPH_LUT3_PTR
+RTS
                 ; load the tiles pixel extracted from the BMP to the VRAM from @B0:0000
                 ; Load the Pixel
                 ;---------------------- B0
@@ -241,94 +179,74 @@ INIT_DISPLAY
                 LDA #$20
                 STA SP16_Y_POS_L
 
-                .setas
-                LDA #SPRITE_Enable +$00
-                STA SP01_CONTROL_REG
-                STA SP02_CONTROL_REG
-                STA SP03_CONTROL_REG
-                STA SP04_CONTROL_REG
-                STA SP05_CONTROL_REG
-                STA SP06_CONTROL_REG
-                STA SP07_CONTROL_REG
-                STA SP08_CONTROL_REG
-                STA SP09_CONTROL_REG
-                STA SP10_CONTROL_REG
-                STA SP11_CONTROL_REG
-                STA SP12_CONTROL_REG
-                STA SP13_CONTROL_REG
-                STA SP14_CONTROL_REG
-                STA SP15_CONTROL_REG
-                STA SP16_CONTROL_REG
+
+                ;-----------------------------
+                ; set the position of the selecte menu
                 .setal
                 LDA #64
                 STA SPRIT_X_SCREEN_START
                 LDA #150
                 STA SPRIT_Y_SCREEN_START
+                LDA #0
+                STA SPRIT_PIXEL_ADDRESS_START
 
-                ; Load the Pixel extracted from the BMP to the VRAM from @B6:0000
-                ;---------------------- B6
-                LDX #<>HL_PIXEL
-                LDY #<>$B60000
-                LDA #$8000
-                MVN <`HL_PIXEL,<`$B60000
 
-                LDX #<>HL_PIXEL + $8000
-                LDY #<>$B68000
-                LDA #$8000
-                MVN <`HL_PIXEL,<`$B68000
-                ;---------------------- B7
-                LDX #<>HL_PIXEL + $10000
-                LDY #<>$B70000
-                LDA #$8000
-                MVN <`HL_PIXEL + $10000,<`$B70000
-
-                LDX #<>HL_PIXEL + $18000
-                LDY #<>$B78000
-                LDA #$8000
-                MVN <`HL_PIXEL + $18000,<`$B78000
-                ;---------------------- B8
-                LDX #<>HL_PIXEL + $20000
-                LDY #<>$B80000
-                LDA #$8000
-                MVN <`HL_PIXEL + $20000,<`$B80000
-
-                LDX #<>HL_PIXEL + $28000
-                LDY #<>$B88000
-                LDA #$8000
-                MVN <`HL_PIXEL + $28000,<`$B88000
-                ;---------------------- B9
-                LDX #<>HL_PIXEL + $30000
-                LDY #<>$B90000
-                LDA #$8000
-                MVN <`HL_PIXEL  + $30000,<`$B90000
-
-                LDX #<>HL_PIXEL + $38000
-                LDY #<>$B98000
-                LDA #$8000
-                MVN <`HL_PIXEL + $38000,<`$B98000
-                ;---------------------- BA
-                LDX #<>HL_PIXEL + $40000
-                LDY #<>$BA0000
-                LDA #$B000 ; left over of the picture's pixel
-                MVN <`HL_PIXEL + $40000,<`$BA0000
-                ;----------------------
-
-                ; enable the bitmap engine
+                ;-------------------------------------------------------
+                ;- Extract the tile level 0 pixel from the BMP picture -
+                ;-------------------------------------------------------
                 setas
-                LDA #1+2
-                STA @l BM_CONTROL_REG
+                setxl
+                LDA #0
+                STA BMP_POSITION_X
+                STA BMP_POSITION_Y
+                ; load the BMP file source adressv and BMP decoded destination address
+                LDA #>TILE_SET_LEVEL_1_BMP        ; TILES_NB[0]
+                STA BMP_PRSE_SRC_PTR
+                STA BMP_PRSE_DST_PTR
 
-                LDA #00
-                STA @l BM_START_ADDY_L
-                STA @l BM_START_ADDY_M
-                LDA #06
-                STA @l BM_START_ADDY_H
+                LDA #<TILE_SET_LEVEL_1_BMP        ; TILES_NB[1]
+                STA BMP_PRSE_SRC_PTR+1
+                STA BMP_PRSE_DST_PTR+1
 
-                setal
-                LDA #640
-                STA @l BM_X_SIZE_L
-                LDA #480
-                STA @l BM_Y_SIZE_L
+                LDA #`TILE_SET_LEVEL_1_BMP        ; TILES_NB[2]
+                STA BMP_PRSE_SRC_PTR+2
+                LDA #`TILE_SET_LEVEL_0_PIXEL ; write the result on the next page
+                STA BMP_PRSE_DST_PTR+2
+
+                ; Parse the BMP file to extract the data in a Byte array
+                ; of the picture resolution whide*hight*bpp (byte per pixel)
+                JSL IBMP_PARSER
+
+                ;-------------------------------------------------------
+                ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
+                ;-------------------------------------------------------
+                setas
+                setxl
+                LDA #0
+                STA BMP_POSITION_X
+                STA BMP_POSITION_Y
+                ; load the BMP file source adressv and BMP decoded destination address
+                LDA #>SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[0]
+                STA BMP_PRSE_SRC_PTR
+                STA BMP_PRSE_DST_PTR
+
+                LDA #<SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[1]
+                STA BMP_PRSE_SRC_PTR+1
+                STA BMP_PRSE_DST_PTR+1
+
+                LDA #`SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[2]
+                STA BMP_PRSE_SRC_PTR+2
+                LDA #`SPRIT_GORDON_SCIENTIST_PIXEL ; write the result on the next page
+                STA BMP_PRSE_DST_PTR+2
+
+                ; Parse the BMP file to extract the data in a Byte array
+                ; of the picture resolution whide*hight*bpp (byte per pixel)
+                ; JSL IBMP_PARSER dosent seam to work on 32*32
+
+
+
+
+
 
                 ; enable the tile engine 0
                 setas
@@ -1498,7 +1416,7 @@ HL_BMP
 ;.binary "assets/halflife.bmp"
 * = $250000
 MENU_PLAY
-.binary "assets/menu/menu_play-select.bmp"
+.binary "assets/menu/menu_play.bmp"
 MENU_PLAY_SELECTED
 .binary "assets/menu/menu_play-select.bmp"
 MENU_LOAD
@@ -1508,12 +1426,12 @@ MENU_LOAD_SELECTED
 .binary "assets/menu/menu_load-select.bmp"
 MENU_OPSIONS
 .binary "assets/menu/menu_options.bmp"
-MENU_OPSIONS_SELECTED
+MENU_OPTIONS_SELECTED
 .binary "assets/menu/menu_options-select.bmp"
 * = $270000
 MENU_CREDIT
 .binary "assets/menu/menu_credits.bmp"
-MENU_CREDIT_SELECTED
+MENU_CREDITS_SELECTED
 .binary "assets/menu/menu_credits-select.bmp"
 
 

@@ -50,7 +50,7 @@ IRQ_HANDLER
 ; FDC Interrupt
                 ;check_irq_bit INT_PENDING_REG0, FNX0_INT06_FDC, FDC_INTERRUPT
 ; Mouse IRQ
-                ;check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
+                check_irq_bit_2 INT_PENDING_REG0, FNX0_INT07_MOUSE, INT_MASK_REG0, MOUSE_INTERRUPT
 
 ; Second Block of 8 Interrupts
 CHECK_PENDING_REG1
@@ -210,8 +210,17 @@ SOF_INTERRUPT
                 LDA #150
   no_clipping_4:  STA @l $000064
 
-                STA @l SPRIT_Y_SCREEN_START
+                JSR TEST_MOUSE_MENUE_BUTON
+                CMP #1
+                BEQ SOF_INTERRUPT__ACTIVE_SPRIT
+                JSR DEACTIVE_SPTIR_MENU
+                BRA SOF_INTERRUPT__SPRIT_DEACTIVATED
+  SOF_INTERRUPT__ACTIVE_SPRIT:
                 JSR Set_Sprit_256x64_Screen_position
+                JSR Set_Sprit_256x64_Pixel_position
+                JSR ACTIVE_SPTIR_MENU
+  SOF_INTERRUPT__SPRIT_DEACTIVATED:
+
                 .setas
                 ;-----
                 LDA JOYSTICK0
@@ -252,6 +261,17 @@ SOL_INTERRUPT
 ; ///////////////////////////////////////////////////////////////////
 MOUSE_INTERRUPT
                 .as
+                    .as
+                    LDA @l $000065
+                    INC A
+                    INC A
+                    INC A
+                    INC A
+                    CMP #$30
+                    BNE no_clipping_5
+                    LDA #0
+                    no_clipping_5:  STA @l $000065
+                    STA SP05_ADDY_PTR_M
                 LDA KBD_INPT_BUF
                 PHA
                 LDX #$0000
@@ -290,7 +310,7 @@ MOUSE_INTERRUPT
                 JSR MOUSE_BUTTON_HANDLER
 
                 LDX #$00
-EXIT_FOR_NEXT_VALUE
+ EXIT_FOR_NEXT_VALUE
                 STX MOUSE_PTR
 
                 setxl
@@ -383,14 +403,15 @@ NMI_HANDLER
 ; ///
 ; ///
 ; ///////////////////////////////////////////////////////////////////
-SPRIT_X_SCREEN_START .dword 0
-SPRIT_Y_SCREEN_START .dword 0
+SPRIT_X_SCREEN_START .dword 64
+SPRIT_Y_SCREEN_START .dword 150
 Set_Sprit_256x64_Screen_position:
             ; write the position of the sprit on the screen (640x480)
+            TAX; save the menue block to display
             .setal
-
             LDA @l SPRIT_X_SCREEN_START
             STA SP01_X_POS_L
+            CLC
             ADC #32
             STA SP02_X_POS_L
             ADC #32
@@ -419,6 +440,7 @@ Set_Sprit_256x64_Screen_position:
 
             LDA @l SPRIT_X_SCREEN_START
             STA SP09_X_POS_L
+            CLC
             ADC #32
             STA SP10_X_POS_L
             ADC #32
@@ -435,6 +457,7 @@ Set_Sprit_256x64_Screen_position:
             STA SP16_X_POS_L
 
             LDA @l SPRIT_Y_SCREEN_START
+            CLC
             ADC #32
             STA SP09_Y_POS_L
             STA SP10_Y_POS_L
@@ -444,4 +467,160 @@ Set_Sprit_256x64_Screen_position:
             STA SP14_Y_POS_L
             STA SP15_Y_POS_L
             STA SP16_Y_POS_L
+            TXA
             RTS
+
+SPRIT_PIXEL_ADDRESS_START    .dword 0
+Set_Sprit_256x64_Pixel_position:
+            .setal
+            LDA SPRIT_PIXEL_ADDRESS_START
+            STA SP01_ADDY_PTR_L
+            ADC #$400
+            STA SP02_ADDY_PTR_L
+            ADC #$400
+            STA SP03_ADDY_PTR_L
+            ADC #$400
+            STA SP04_ADDY_PTR_L
+            ADC #$400
+            STA SP05_ADDY_PTR_L
+            ADC #$400
+            STA SP06_ADDY_PTR_L
+            ADC #$400
+            STA SP07_ADDY_PTR_L
+            ADC #$400
+            STA SP08_ADDY_PTR_L
+            ADC #$400
+            STA SP09_ADDY_PTR_L
+            ADC #$400
+            STA SP10_ADDY_PTR_L
+            ADC #$400
+            STA SP11_ADDY_PTR_L
+            ADC #$400
+            STA SP12_ADDY_PTR_L
+            ADC #$400
+            STA SP13_ADDY_PTR_L
+            ADC #$400
+            STA SP14_ADDY_PTR_L
+            ADC #$400
+            STA SP15_ADDY_PTR_L
+            ADC #$400
+            STA SP16_ADDY_PTR_L
+            RTS
+
+TEST_MOUSE_MENUE_BUTON:
+              .setal
+              LDA @l MOUSE_POS_X_LO
+              TAX
+              CMP #64 ; x min                           ; test if the mouse is far enoug from the left side of the screen
+              BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
+              LDA @l MOUSE_POS_Y_LO
+              ;---------------------------------------- PLAY
+              CMP #174 ; Play Y min
+              BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
+              CMP #191  ; play Y max
+              BMI TEST_MOUSE_MENUE_BUTON__PLAY
+              ;---------------------------------------- LOAD
+              CMP #238 ; LOAD Y min
+              BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
+              CMP #255  ; LOAD Y max
+              BMI TEST_MOUSE_MENUE_BUTON__LOAD
+              ;---------------------------------------- OPTIONS
+              CMP #300 ; OPTIONS Y min
+              BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
+              CMP #318  ; OPTIONS Y max
+              BMI TEST_MOUSE_MENUE_BUTON__OPTIONS
+              ;---------------------------------------- CREDIT
+              CMP #366 ; CREDIT Y min
+              BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
+              CMP #383  ; CREDIT Y max
+              BMI TEST_MOUSE_MENUE_BUTON__CREDITS
+              ;---------------------------------------- EXIT
+   TEST_MOUSE_MENUE_BUTON__OUT_Temp BRA TEST_MOUSE_MENUE_BUTON__OUT ; no Y position is with in a button shape
+
+   TEST_MOUSE_MENUE_BUTON__PLAY:
+              TXA
+              CMP #187 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
+              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              LDA #$0000
+              STA @l SPRIT_PIXEL_ADDRESS_START
+              LDA #150
+              STA @l SPRIT_Y_SCREEN_START
+              BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
+   TEST_MOUSE_MENUE_BUTON__LOAD:
+              TXA
+              CMP #193 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
+              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              LDA #$4000
+              STA @l SPRIT_PIXEL_ADDRESS_START
+              LDA #150+64
+              STA @l SPRIT_Y_SCREEN_START
+              BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
+   TEST_MOUSE_MENUE_BUTON__OPTIONS:
+              TXA
+              CMP #267 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
+              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              LDA #$8000
+              STA @l SPRIT_PIXEL_ADDRESS_START
+              LDA #150+64*2
+              STA @l SPRIT_Y_SCREEN_START
+              BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
+   TEST_MOUSE_MENUE_BUTON__CREDITS:
+              TXA
+              CMP #262 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
+              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              LDA #$C000
+              STA @l SPRIT_PIXEL_ADDRESS_START
+              LDA #150+64*3
+              STA @l SPRIT_Y_SCREEN_START
+              BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
+   TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED:
+              LDA #1
+              BRA TEST_MOUSE_MENUE_BUTON__EXIT
+   TEST_MOUSE_MENUE_BUTON__OUT:
+              LDA #0
+   TEST_MOUSE_MENUE_BUTON__EXIT:
+              RTS
+; ///////////////////////////////////////////////////////////////////
+ACTIVE_SPTIR_MENU:
+              .setas
+              ;LDA #0
+              LDA #SPRITE_Enable +$00
+              STA SP01_CONTROL_REG
+              STA SP02_CONTROL_REG
+              STA SP03_CONTROL_REG
+              STA SP04_CONTROL_REG
+              STA SP05_CONTROL_REG
+              STA SP06_CONTROL_REG
+              STA SP07_CONTROL_REG
+              STA SP08_CONTROL_REG
+              STA SP09_CONTROL_REG
+              STA SP10_CONTROL_REG
+              STA SP11_CONTROL_REG
+              STA SP12_CONTROL_REG
+              STA SP13_CONTROL_REG
+              STA SP14_CONTROL_REG
+              STA SP15_CONTROL_REG
+              STA SP16_CONTROL_REG
+              RTS
+; ///////////////////////////////////////////////////////////////////
+DEACTIVE_SPTIR_MENU:
+              .setas
+              LDA #0
+              ;LDA #SPRITE_Enable +$00
+              STA SP01_CONTROL_REG
+              STA SP02_CONTROL_REG
+              STA SP03_CONTROL_REG
+              STA SP04_CONTROL_REG
+              STA SP05_CONTROL_REG
+              STA SP06_CONTROL_REG
+              STA SP07_CONTROL_REG
+              STA SP08_CONTROL_REG
+              STA SP09_CONTROL_REG
+              STA SP10_CONTROL_REG
+              STA SP11_CONTROL_REG
+              STA SP12_CONTROL_REG
+              STA SP13_CONTROL_REG
+              STA SP14_CONTROL_REG
+              STA SP15_CONTROL_REG
+              STA SP16_CONTROL_REG
+              RTS

@@ -295,7 +295,7 @@ MOUSE_INTERRUPT
                 STA MOUSE_POS_X_LO
                 LDA @lMOUSE_PTR_X_POS_H
                 STA MOUSE_POS_X_HI
-
+                
                 LDA @lMOUSE_PTR_Y_POS_L
                 STA MOUSE_POS_Y_LO
                 LDA @lMOUSE_PTR_Y_POS_H
@@ -511,7 +511,7 @@ TEST_MOUSE_MENUE_BUTON:
               .setal
               LDA @l MOUSE_POS_X_LO
               TAX
-              CMP #64 ; x min                           ; test if the mouse is far enoug from the left side of the screen
+              CMP #98 ; x min                           ; test if the mouse is far enoug from the left side of the screen
               BMI TEST_MOUSE_MENUE_BUTON__OUT_Temp
               LDA @l MOUSE_POS_Y_LO
               ;---------------------------------------- PLAY

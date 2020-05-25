@@ -1327,8 +1327,10 @@ NB_TILE_MAP_X .word $3; will be updatad by the code the day I will load the map 
 NB_TILE_MAP_Y .word $2
 CURENT_TILE_MAP_X .word $0
 CURENT_TILE_MAP_Y .word $0
+
+
 game_board
-* = $164C00
+;* = $164C00
 game_board_0
 game_board_0__00_00
 .binary "assets/HL_V2_Tile_map_layer_1__00_00.map"
@@ -1374,6 +1376,25 @@ PALETTE
 PALETTE_TILE_SET_LEVEL_0
 .binary "assets/HL_V2_tile_shifted_256.data.pal"
 ;.binary "assets/HL_V2_tile_set_256.pal"HL_V2_tile_shifted_256.data
+
+
+VGM_FILE
+; YM2151
+;.binary "assets/songs/04 Kalinka.vgm"
+;.binary "assets/songs/peddler.vgm"
+;.binary "assets/songs/05 Troika.vgm"
+;.binary "assets/songs/test.vgm"
+;.binary "assets/songs/02 Strolling Player.vgm"
+;.binary "assets/songs/test_drone.vgm"
+;.binary "assets/songs/11 - Unknown (Sound Test 8B).vgm"
+;.binary "assets/songs/Sega.vgm"
+VGM_BUTON_ROLLOVER
+.binary "assets/sound/buttonrollover.vgm"
+VGM_BUTON_CLICK
+.binary "assets/sound/buttonclick.vgm"
+VGM_BUTON_RELEASE
+.binary "assets/sound/buttonclickrelease.vgm"
+
 * = $1a0000
 TILES ; just there to keep the Sprit code not complaining, wont be used for enyting at the moment
 TILE_SET_LEVEL_0_BMP

@@ -44,13 +44,30 @@ IRQ_HANDLER
                 ;JSR SOL_INTERRUPT
                 check_irq_bit_2 INT_PENDING_REG0, FNX0_INT00_SOF, INT_MASK_REG0, SOF_INTERRUPT
 ; Start of line
-                check_irq_bit_2 INT_PENDING_REG0, FNX0_INT01_SOL, INT_MASK_REG0, SOL_INTERRUPT
+                ;check_irq_bit_2 INT_PENDING_REG0, FNX0_INT01_SOL, INT_MASK_REG0, SOL_INTERRUPT
 ; Timer 0
-                ;check_irq_bit INT_PENDING_REG0, FNX0_INT02_TMR0, TIMER0_INTERRUPT
+                check_irq_bit_2 INT_PENDING_REG0, FNX0_INT02_TMR0, INT_MASK_REG0, TIMER0_INTERRUPT
 ; FDC Interrupt
                 ;check_irq_bit INT_PENDING_REG0, FNX0_INT06_FDC, FDC_INTERRUPT
 ; Mouse IRQ
                 check_irq_bit_2 INT_PENDING_REG0, FNX0_INT07_MOUSE, INT_MASK_REG0, MOUSE_INTERRUPT
+                .as
+                ;LDA KBD_INPT_BUF
+                LDA STATUS_PORT
+                ;setal
+                ;LDA #<>INVALID_FILE_MSG
+                ;JSL  IPRINT
+                ;STA MSG_PTR
+                ;setas
+                ;JSR DISPLAY_MSG
+                ;JSL IPRINT_HEX
+                ;LDA #'A'
+                ;JSL IPUTC
+                ;.as
+                ;LDA INT_PENDING_REG0
+                ;AND #FNX0_INT07_MOUSE
+                ;STA INT_PENDING_REG0
+                ;check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
 
 ; Second Block of 8 Interrupts
 CHECK_PENDING_REG1
@@ -188,7 +205,6 @@ KEYBOARD_INTERRUPT
 ; ///
 ; ///////////////////////////////////////////////////////////////////
 SOF_INTERRUPT
-
                 .as
                 LDA @l $000061
                 INC A
@@ -210,11 +226,12 @@ SOF_INTERRUPT
                 LDA #150
   no_clipping_4:  STA @l $000064
 
+                ;JSR MOUSE_INTERRUPT
                 JSR TEST_MOUSE_MENUE_BUTON
-                CMP #1
-                BEQ SOF_INTERRUPT__ACTIVE_SPRIT
-                JSR DEACTIVE_SPTIR_MENU
-                BRA SOF_INTERRUPT__SPRIT_DEACTIVATED
+                ; CMP #1
+                ; BEQ SOF_INTERRUPT__ACTIVE_SPRIT
+                ; JSR DEACTIVE_SPTIR_MENU
+                ; BRA SOF_INTERRUPT__SPRIT_DEACTIVATED
   SOF_INTERRUPT__ACTIVE_SPRIT:
                 JSR Set_Sprit_256x64_Screen_position
                 JSR Set_Sprit_256x64_Pixel_position
@@ -222,9 +239,15 @@ SOF_INTERRUPT
   SOF_INTERRUPT__SPRIT_DEACTIVATED:
 
                 .setas
+                ;JSR MOUSE_INTERRUPT
+                ;check_irq_bit_2 INT_PENDING_REG0, FNX0_INT07_MOUSE, INT_MASK_REG0, MOUSE_INTERRUPT
+                .setas
                 ;-----
                 LDA JOYSTICK0
-                JSR UPDATE_DISPLAY
+                ;JSR UPDATE_DISPLAY
+
+                ;.as
+                ;JSR VGM_WRITE_REGISTER
 
                 RTS
 
@@ -250,7 +273,28 @@ SOL_INTERRUPT
                 STA SP03_ADDY_PTR_M
                 ;LDA JOYSTICK0
                 ;JSR UPDATE_DISPLAY
-
+                RTS
+;
+; ****************************************************************
+; ****************************************************************
+; * Play VGM files
+; ****************************************************************
+; ****************************************************************
+TIMER0_INTERRUPT
+                .as
+                LDA @l $000066
+                INC A
+                INC A
+                INC A
+                INC A
+                CMP #$30
+                BNE no_clipping_6
+                LDA #0
+                no_clipping_6:  STA @l $000066
+                STA SP06_ADDY_PTR_M
+                LDA @l $000061
+                STA SP07_ADDY_PTR_M
+                JSR VGM_WRITE_REGISTER
                 RTS
 ;
 ; ///////////////////////////////////////////////////////////////////
@@ -259,19 +303,36 @@ SOL_INTERRUPT
 ; /// Desc: Basically Assigning the 3Bytes Packet to Vicky's Registers
 ; ///       Vicky does the rest
 ; ///////////////////////////////////////////////////////////////////
+
+MOUSE_INTERRUPT_2
+                .as
+                ; LDA @l $000065
+                ; INC A
+                ; INC A
+                ; INC A
+                ; INC A
+                ; CMP #$30
+                ; BNE no_clipping_5
+                ; LDA #0
+                ; no_clipping_5:  STA @l $000065
+                ; STA SP05_ADDY_PTR_M
+                RTS
+
 MOUSE_INTERRUPT
                 .as
-                    .as
-                    LDA @l $000065
-                    INC A
-                    INC A
-                    INC A
-                    INC A
-                    CMP #$30
-                    BNE no_clipping_5
-                    LDA #0
-                    no_clipping_5:  STA @l $000065
-                    STA SP05_ADDY_PTR_M
+
+                LDA @l $000065
+                INC A
+                INC A
+                INC A
+                INC A
+                CMP #$30
+                BNE no_clipping_5
+                LDA #0
+                no_clipping_5:  STA @l $000065
+                STA SP05_ADDY_PTR_M
+
+
                 LDA KBD_INPT_BUF
                 PHA
                 LDX #$0000
@@ -295,7 +356,7 @@ MOUSE_INTERRUPT
                 STA MOUSE_POS_X_LO
                 LDA @lMOUSE_PTR_X_POS_H
                 STA MOUSE_POS_X_HI
-                
+
                 LDA @lMOUSE_PTR_Y_POS_L
                 STA MOUSE_POS_Y_LO
                 LDA @lMOUSE_PTR_Y_POS_H

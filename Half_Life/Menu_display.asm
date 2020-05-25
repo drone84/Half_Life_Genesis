@@ -26,6 +26,7 @@ LOAD_MAIN_MENU
 
                   ; Parse the BMP file to extract the data in a Byte array
                   ; of the picture resolution whide*hight*bpp (byte per pixel)
+
                   JSL IBMP_PARSER
                   ;-------------------------------------------------------
                   ; Load the pallet

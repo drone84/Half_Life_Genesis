@@ -41,6 +41,7 @@ SONG_START        = $80 ; 4 bytes
 CURRENT_POSITION  = $84 ; 4 bytes
 WAIT_CNTR         = $88 ; 2 bytes
 PCM_OFFSET        = $8A ; 4 bytes
+SONG_LOOP         = $8E ; 1 byte
 
 AY_3_8910_A       = $90 ; 2 bytes
 AY_3_8910_B       = $92 ; 2 bytes

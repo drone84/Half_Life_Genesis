@@ -40,6 +40,15 @@ IRQ_HANDLER
                 PLB
                 LDA INT_PENDING_REG0
                 BEQ CHECK_PENDING_REG1
+
+; Mouse IRQ
+                EMPTY_KBD_BUFFER
+                check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
+                check_irq_bit_2 INT_PENDING_REG1, FNX1_INT00_KBD, INT_MASK_REG1, KEYBOARD_INTERRUPT
+
+                LDA @lSTATUS_PORT
+                BIT #1
+                BNE EMPTY_KBD_BUFFER
 ; Start of Frame
                 ;JSR SOL_INTERRUPT
                 check_irq_bit_2 INT_PENDING_REG0, FNX0_INT00_SOF, INT_MASK_REG0, SOF_INTERRUPT
@@ -49,25 +58,7 @@ IRQ_HANDLER
                 check_irq_bit_2 INT_PENDING_REG0, FNX0_INT02_TMR0, INT_MASK_REG0, TIMER0_INTERRUPT
 ; FDC Interrupt
                 ;check_irq_bit INT_PENDING_REG0, FNX0_INT06_FDC, FDC_INTERRUPT
-; Mouse IRQ
-                check_irq_bit_2 INT_PENDING_REG0, FNX0_INT07_MOUSE, INT_MASK_REG0, MOUSE_INTERRUPT
-                .as
-                ;LDA KBD_INPT_BUF
-                LDA STATUS_PORT
-                ;setal
-                ;LDA #<>INVALID_FILE_MSG
-                ;JSL  IPRINT
-                ;STA MSG_PTR
-                ;setas
-                ;JSR DISPLAY_MSG
-                ;JSL IPRINT_HEX
-                ;LDA #'A'
-                ;JSL IPUTC
-                ;.as
-                ;LDA INT_PENDING_REG0
-                ;AND #FNX0_INT07_MOUSE
-                ;STA INT_PENDING_REG0
-                ;check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
+
 
 ; Second Block of 8 Interrupts
 CHECK_PENDING_REG1
@@ -226,8 +217,9 @@ SOF_INTERRUPT
                 LDA #150
   no_clipping_4:  STA @l $000064
 
-                ;JSR MOUSE_INTERRUPT
                 JSR TEST_MOUSE_MENUE_BUTON
+                CMP #1
+
                 ; CMP #1
                 ; BEQ SOF_INTERRUPT__ACTIVE_SPRIT
                 ; JSR DEACTIVE_SPTIR_MENU
@@ -282,18 +274,18 @@ SOL_INTERRUPT
 ; ****************************************************************
 TIMER0_INTERRUPT
                 .as
-                LDA @l $000066
-                INC A
-                INC A
-                INC A
-                INC A
-                CMP #$30
-                BNE no_clipping_6
-                LDA #0
-                no_clipping_6:  STA @l $000066
-                STA SP06_ADDY_PTR_M
-                LDA @l $000061
-                STA SP07_ADDY_PTR_M
+                                                          LDA @l $000066
+                                                          INC A
+                                                          INC A
+                                                          INC A
+                                                          INC A
+                                                          CMP #$30
+                                                          BNE no_clipping_6
+                                                          LDA #0
+                                                          no_clipping_6:  STA @l $000066
+                                                          STA SP06_ADDY_PTR_M
+                                                          LDA @l $000061
+                                                          STA SP07_ADDY_PTR_M
                 JSR VGM_WRITE_REGISTER
                 RTS
 ;

@@ -225,7 +225,7 @@ SOF_INTERRUPT
                 ; JSR DEACTIVE_SPTIR_MENU
                 ; BRA SOF_INTERRUPT__SPRIT_DEACTIVATED
   SOF_INTERRUPT__ACTIVE_SPRIT:
-                JSR Set_Sprit_256x64_Screen_position
+                JSR Set_Sprit_256x64_Position_on_Screen ;
                 JSR Set_Sprit_256x64_Pixel_position
                 JSR ACTIVE_SPTIR_MENU
   SOF_INTERRUPT__SPRIT_DEACTIVATED:
@@ -452,13 +452,13 @@ NMI_HANDLER
 
 ; ///////////////////////////////////////////////////////////////////
 ; ///
-; ///
-; ///
+; /// Load SPRIT_X_SCREEN_START  and SPRIT_X_SCREEN_START then set
+; /// all the sprit offset to display a 8*2 sprit grid
 ; ///
 ; ///////////////////////////////////////////////////////////////////
-SPRIT_X_SCREEN_START .dword 64
-SPRIT_Y_SCREEN_START .dword 150
-Set_Sprit_256x64_Screen_position:
+SPRIT_X_SCREEN_START .dword 64+31
+SPRIT_Y_SCREEN_START .dword 150+32
+Set_Sprit_256x64_Position_on_Screen:
             ; write the position of the sprit on the screen (640x480)
             TAX; save the menue block to display
             .setal
@@ -523,6 +523,14 @@ Set_Sprit_256x64_Screen_position:
             TXA
             RTS
 
+; ///////////////////////////////////////////////////////////////////
+; ///
+; /// Read the start address of the sprit set in VRAM (B0:0000).
+; /// Each sprit is 32*32 so eache adfdress is incremented by 0x400
+; /// to pint to eache individual sprit
+; /// Use only _ADDY_PTR_L for now as all the Sprit fit in B2 banck
+; ///
+; ///////////////////////////////////////////////////////////////////
 SPRIT_PIXEL_ADDRESS_START    .dword 0
 Set_Sprit_256x64_Pixel_position:
             .setal
@@ -560,6 +568,13 @@ Set_Sprit_256x64_Pixel_position:
             STA SP16_ADDY_PTR_L
             RTS
 
+; ///////////////////////////////////////////////////////////////////
+; ///
+; /// Function testing the mouse position and set the sprit pointer
+; /// source address and posistion on screen acording to where is the
+; /// mouse
+; ///
+; ///////////////////////////////////////////////////////////////////
 TEST_MOUSE_MENUE_BUTON:
               .setal
               LDA @l MOUSE_POS_X_LO
@@ -596,7 +611,7 @@ TEST_MOUSE_MENUE_BUTON:
               BPL TEST_MOUSE_MENUE_BUTON__OUT
               LDA #$0000
               STA @l SPRIT_PIXEL_ADDRESS_START
-              LDA #150
+              LDA #150+32
               STA @l SPRIT_Y_SCREEN_START
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
    TEST_MOUSE_MENUE_BUTON__LOAD:
@@ -605,7 +620,7 @@ TEST_MOUSE_MENUE_BUTON:
               BPL TEST_MOUSE_MENUE_BUTON__OUT
               LDA #$4000
               STA @l SPRIT_PIXEL_ADDRESS_START
-              LDA #150+64
+              LDA #150+32+64
               STA @l SPRIT_Y_SCREEN_START
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
    TEST_MOUSE_MENUE_BUTON__OPTIONS:
@@ -614,7 +629,7 @@ TEST_MOUSE_MENUE_BUTON:
               BPL TEST_MOUSE_MENUE_BUTON__OUT
               LDA #$8000
               STA @l SPRIT_PIXEL_ADDRESS_START
-              LDA #150+64*2
+              LDA #150+32+64*2
               STA @l SPRIT_Y_SCREEN_START
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
    TEST_MOUSE_MENUE_BUTON__CREDITS:
@@ -623,7 +638,7 @@ TEST_MOUSE_MENUE_BUTON:
               BPL TEST_MOUSE_MENUE_BUTON__OUT
               LDA #$C000
               STA @l SPRIT_PIXEL_ADDRESS_START
-              LDA #150+64*3
+              LDA #150+32+64*3
               STA @l SPRIT_Y_SCREEN_START
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
    TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED:

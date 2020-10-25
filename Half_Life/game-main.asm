@@ -10,6 +10,10 @@ TARGET_RAM = 2                ; The code is being assembled for RAM
 .include "macros_inc.asm"
 .include "bank_00_inc.asm"
 .include "vicky_def.asm"
+.include "VKYII_CFP9553_BITMAP_def.asm"
+.include "VKYII_CFP9553_COLLISION_def.asm"
+.include "VKYII_CFP9553_SPRITE_def.asm"
+.include "VKYII_CFP9553_TILEMAP_def.asm"
 .include "interrupt_def.asm"
 .include "keyboard_def.asm"
 .include "io_def.asm"
@@ -126,7 +130,7 @@ GAME_START
             LDA #0
             STA BORDER_CTRL_REG
             ; enable graphics, tiles and sprites display
-            LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En + Mstr_Ctrl_Text_Mode_En + Mstr_Ctrl_Text_Overlay
+            LDA #Mstr_Ctrl_Graph_Mode_En + Mstr_Ctrl_Bitmap_En + Mstr_Ctrl_TileMap_En + Mstr_Ctrl_Sprite_En + Mstr_Ctrl_Text_Mode_En; + Mstr_Ctrl_Text_Overlay
             STA MASTER_CTRL_REG_L
 
             ; Enable SOF

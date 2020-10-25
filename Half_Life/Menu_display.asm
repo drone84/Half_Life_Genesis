@@ -96,19 +96,20 @@ LOAD_MAIN_MENU
                   ; enable the bitmap engine
                   setas
                   LDA #1+2
-                  STA @l BM_CONTROL_REG
+                  STA @l BM0_CONTROL_REG
 
                   LDA #00
-                  STA @l BM_START_ADDY_L
-                  STA @l BM_START_ADDY_M
+                  STA @l BM0_START_ADDY_L
+                  STA @l BM0_START_ADDY_M
                   LDA #06
-                  STA @l BM_START_ADDY_H
+                  STA @l BM0_START_ADDY_H
 
-                  setal
-                  LDA #640
-                  STA @l BM_X_SIZE_L
-                  LDA #480
-                  STA @l BM_Y_SIZE_L
+                  ; register removed in VICKY II
+                  ;setal
+                  ;LDA #640
+                  ;STA @l BM_X_SIZE_L
+                  ;LDA #480
+                  ;STA @l BM_Y_SIZE_L
 
                   ;-------------------------------------------------------------
                   ;-------------------------------------------------------------
@@ -134,7 +135,7 @@ LOAD_MAIN_MENU
 
                   LDA #`MENU_PLAY_SELECTED
                   STA BMP_PRSE_SRC_PTR+2
-                  LDA #`MENU_PLAY + $80000 ; write the result on the next page
+                  LDA #$28 ;LDA #`MENU_PLAY + $80000 ; write the result on the next page
                   STA BMP_PRSE_DST_PTR+2
 
                   ; Parse the BMP file to extract the data in a Byte array
@@ -149,13 +150,14 @@ LOAD_MAIN_MENU
                   STA @l SPRIT_SIZE_TILE_X
                   LDA #64
                   STA @l SPRIT_SIZE_TILE_Y
-                  LDA#<>MENU_PLAY + $80000
+                  LDA#<>MENU_PLAY + $80000 +1 ; +1 to fix the BMP offset error
                   STA @l SPRIT_SRC
-                  LDA #`MENU_PLAY + $80000
+                  LDA #$28 ;LDA #`MENU_PLAY + $80000
                   STA @l SPRIT_SRC+2
                   LDA #$0000
                   STA @l SPRIT_DES
-                  LDA #$00B2
+                  LDA #$00B2 ;
+                  ;LDA #$0029 ;LDA #$00B2
                   STA @l SPRIT_DES+2
                   JSR LOAD_TILED_SPRITES
                   ;-------------------------------------------------------

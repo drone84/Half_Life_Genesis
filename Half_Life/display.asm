@@ -183,9 +183,9 @@ RTS
                 ;-----------------------------
                 ; set the position of the selecte menu
                 .setal
-                LDA #64
+                LDA #64+32
                 STA SPRIT_X_SCREEN_START
-                LDA #150
+                LDA #150 +10
                 STA SPRIT_Y_SCREEN_START
                 LDA #0
                 STA SPRIT_PIXEL_ADDRESS_START
@@ -430,7 +430,7 @@ LOAD_TILE_MAP_1
 ; Load tiled sprite in VRAM
 ; *************************************************************
 ; input
-SPRIT_SIZE_TILE_X .word $0 ; the size of the pictur in pixel
+SPRIT_SIZE_TILE_X .word $0 ; the size of the picture in pixel
 SPRIT_SIZE_TILE_Y .word $0
 SPRIT_SRC .dword 0        ; address where to get and load the sata
 SPRIT_DES .dword 0

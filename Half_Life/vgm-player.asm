@@ -239,6 +239,15 @@ increment_long_addr .macro
     increment_done
             setas
                     .endm
+decrement_long_addr .macro
+            setal
+            DEC \1
+            CMP #$FFFF
+            BNE increment_done
+            DEC \1 + 2
+    increment_done
+            setas
+                    .endm
 ; *******************************************************************
 ; * Interrupt driven sub-routine.
 ; *******************************************************************
@@ -846,6 +855,7 @@ WRITE_YM_CMD
 ; *******************************************************************
 ; * Wait Commands
 ; *******************************************************************
+SONG_LOOP_ENABLED .word 0
 WAIT_COMMANDS
             .as
             LDA COMMAND
@@ -879,8 +889,14 @@ WAIT_COMMANDS
         CHK_END_SONG
             CMP #$66 ; end of song
             BNE CHK_DATA_BLOCK
-
+            LDA @l SONG_LOOP_ENABLED
+            CMP #1
+            BNE NO_VGM_LOOPING_SONG
             JSR VGM_SET_LOOP_POINTERS
+            BRA VGM_LOOPING_SONG
+NO_VGM_LOOPING_SONG:
+            decrement_long_addr CURRENT_POSITION
+VGM_LOOPING_SONG:
             JMP VGM_LOOP_DONE
 
         CHK_DATA_BLOCK

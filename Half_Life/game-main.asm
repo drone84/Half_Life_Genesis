@@ -121,6 +121,8 @@ GAME_START
 
             ;setdp 0
             ;JSL INITKEYBOARD
+            LDA #0
+            STA @l SONG_LOOP_ENABLED ; prevent the song to be played in  a loop
             JSR VGM_START
             JSR CLEAR_VRAM_B0_BA
             JSR LOAD_MAIN_MENU

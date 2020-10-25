@@ -575,6 +575,7 @@ Set_Sprit_256x64_Pixel_position:
 ; /// mouse
 ; ///
 ; ///////////////////////////////////////////////////////////////////
+MOUSE_CROSSING_BUTON_AREA .dword 0; this variable is used to detect when the mouse is going in the buton area so we can start playing sond only one time instead of everytime the mouse is detected in the byton area
 TEST_MOUSE_MENUE_BUTON:
               .setal
               LDA @l MOUSE_POS_X_LO
@@ -641,11 +642,25 @@ TEST_MOUSE_MENUE_BUTON:
               LDA #150+32+64*3
               STA @l SPRIT_Y_SCREEN_START
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
+              ; set and reset the mouse crossing area flag
+
    TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED:
+              LDA @l MOUSE_CROSSING_BUTON_AREA
+              CMP #0
+              BNE TEST_MOUSE_MENUE_BUTON__SOUND_ALREADDY_TRIGGERED
+              JSR VGM_SET_SONG_POINTERS
+              .setal
+   TEST_MOUSE_MENUE_BUTON__SOUND_ALREADDY_TRIGGERED:
+              JSR ACTIVE_SPTIR_MENU
+              .setal
               LDA #1
+              STA @l MOUSE_CROSSING_BUTON_AREA
               BRA TEST_MOUSE_MENUE_BUTON__EXIT
    TEST_MOUSE_MENUE_BUTON__OUT:
-              LDA #0
+              JSR DEACTIVE_SPTIR_MENU
+              .setal
+              LDA #0 ; return 0 and reset the mouse entering area flag
+              STA @l MOUSE_CROSSING_BUTON_AREA
    TEST_MOUSE_MENUE_BUTON__EXIT:
               RTS
 ; ///////////////////////////////////////////////////////////////////

@@ -42,15 +42,16 @@ IRQ_HANDLER
                 BEQ CHECK_PENDING_REG1
 
 ; Mouse IRQ
-                EMPTY_KBD_BUFFER
-                check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
-                check_irq_bit_2 INT_PENDING_REG1, FNX1_INT00_KBD, INT_MASK_REG1, KEYBOARD_INTERRUPT
 
-                LDA @lSTATUS_PORT
-                BIT #1
-                BNE EMPTY_KBD_BUFFER
+
+                ;EMPTY_KBD_BUFFER
+                ;check_irq_bit INT_PENDING_REG0, FNX0_INT07_MOUSE, MOUSE_INTERRUPT
+                ;check_irq_bit_2 INT_PENDING_REG1, FNX1_INT00_KBD, INT_MASK_REG1, KEYBOARD_INTERRUPT
+
+                ;LDA @lSTATUS_PORT
+                ;BIT #1
+                ;BNE EMPTY_KBD_BUFFER
 ; Start of Frame
-                ;JSR SOL_INTERRUPT
                 check_irq_bit_2 INT_PENDING_REG0, FNX0_INT00_SOF, INT_MASK_REG0, SOF_INTERRUPT
 ; Start of line
                 ;check_irq_bit_2 INT_PENDING_REG0, FNX0_INT01_SOL, INT_MASK_REG0, SOL_INTERRUPT
@@ -94,7 +95,6 @@ CHECK_PENDING_REG3
 
 EXIT_IRQ_HANDLE
                 ; Exit Interrupt Handler
-
                 RTL
 
 ; ****************************************************************
@@ -107,16 +107,16 @@ EXIT_IRQ_HANDLE
 ; * Todo: rewrite this to use indirect or indexed jumps
 KEYBOARD_INTERRUPT
                 .as
-                LDA @l $000060
-                INC A
-                INC A
-                INC A
-                INC A
-                CMP #$30
-                BNE no_clipping_1
-                LDA #0
-  no_clipping_1:  STA @l $000060
-                STA SP01_ADDY_PTR_M
+                ;LDA @l $000060
+                ;INC A
+                ;INC A
+                ;INC A
+                ;INC A
+                ;CMP #$30
+                ;BNE no_clipping_1
+                ;LDA #0
+  ;no_clipping_1:  STA @l $000060
+                ;STA SP01_ADDY_PTR_M
 
                 LDA KBD_INPT_BUF        ; Get Scan Code from KeyBoard
                 STA KEYBOARD_SC_TMP     ; Save Code Immediately
@@ -186,7 +186,11 @@ KEYBOARD_INTERRUPT
         SKIP_KEY
                 LDA #$9F
         KBD_DONE
-                ;JSR UPDATE_DISPLAY
+                LDA @l DISPLAY_MENUE
+                CMP #0
+                BNE KEYBOARD_INTERRUPT__DONT_UPDATE_MAP
+                ;;;JSR UPDATE_DISPLAY
+  KEYBOARD_INTERRUPT__DONT_UPDATE_MAP:
                 RTS
 ;
 ; ///////////////////////////////////////////////////////////////////
@@ -195,52 +199,70 @@ KEYBOARD_INTERRUPT
 ; /// 60Hz, 16ms Cyclical Interrupt
 ; ///
 ; ///////////////////////////////////////////////////////////////////
+DISPLAY_MENUE .word 1
 SOF_INTERRUPT
                 .as
+                LDA @l $000062
+                INC A
+                STA @l $000062
+                CMP #$0C ; 60
+                BEQ SOF_INTERRUPT__Updating_DEBUG_SPRIT
+
+                BRA SOF_INTERRUPT__ACTIVE_SKIP_Updating_DEBUG_SPRIT
+SOF_INTERRUPT__Updating_DEBUG_SPRIT:
+                ;LDA @l PLAYER_Y
+                ;ASL A
+                ;ASL A
+                ;STA @l TL2_WINDOW_Y_POS_H
+                ;STA @l TL0_WINDOW_y_POS_H
+
+                ;LDA @l 000063;PLAYER_X
+                ;INC A
+                ;STA @l 000063
+                ;ASL A
+                ;ASL A
+                ;STA @l TL2_WINDOW_X_POS_H
+                ;STA @l TL0_WINDOW_X_POS_H
+                ;STA @l TL2_WINDOW_X_POS_L
+                ;STA @l TL0_WINDOW_X_POS_L
+
+                LDA #$00
+                STA @l $000062
                 LDA @l $000061
                 INC A
                 INC A
                 INC A
                 INC A
-                CMP #$30
+                CMP # 4*8 +4*4
                 BNE no_clipping_2
-                LDA #0
+                LDA # 4*8
   no_clipping_2:  STA @l $000061
-                STA SP02_ADDY_PTR_M
+                STA SP07_ADDY_PTR_M
                 ;-----
+SOF_INTERRUPT__ACTIVE_SKIP_Updating_DEBUG_SPRIT:
                 .setal
-                LDA @l $000064
-                CLC
-                ADC #64
-                CMP #150+150*1-1
-                BMI no_clipping_4
-                LDA #150
-  no_clipping_4:  STA @l $000064
-
-                JSR TEST_MOUSE_MENUE_BUTON
-                CMP #1
-
+  SOF_INTERRUPT__ACTIVE_SPRIT:
+                ; LDA @l DISPLAY_MENUE
+                ; CMP #1
+                ; BNE SOF_INTERRUPT__DONT_DISPLAU_MENUE
                 ; CMP #1
                 ; BEQ SOF_INTERRUPT__ACTIVE_SPRIT
                 ; JSR DEACTIVE_SPTIR_MENU
                 ; BRA SOF_INTERRUPT__SPRIT_DEACTIVATED
-  SOF_INTERRUPT__ACTIVE_SPRIT:
-                JSR Set_Sprit_256x64_Position_on_Screen ;
-                JSR Set_Sprit_256x64_Pixel_position
-                JSR ACTIVE_SPTIR_MENU
-  SOF_INTERRUPT__SPRIT_DEACTIVATED:
+                ;;;JSR TEST_MOUSE_MENUE_BUTON
+                ;;;JSR Set_Sprit_256x64_Position_on_Screen ;
+                ;;;JSR Set_Sprit_256x64_Pixel_position
+                ;;;JSR ACTIVE_SPTIR_MENU
+  ; SOF_INTERRUPT__DONT_DISPLAU_MENUE:
+  ; SOF_INTERRUPT__SPRIT_DEACTIVATED:
 
-                .setas
+                ; .setas
                 ;JSR MOUSE_INTERRUPT
                 ;check_irq_bit_2 INT_PENDING_REG0, FNX0_INT07_MOUSE, INT_MASK_REG0, MOUSE_INTERRUPT
-                .setas
+                ; .setas
                 ;-----
                 LDA JOYSTICK0
-                ;JSR UPDATE_DISPLAY
-
-                ;.as
-                ;JSR VGM_WRITE_REGISTER
-
+                JSR UPDATE_DISPLAY
                 RTS
 
 ;
@@ -253,16 +275,16 @@ SOF_INTERRUPT
 SOL_INTERRUPT
 
                 .as
-                LDA @l $000062
-                INC A
-                INC A
-                INC A
-                INC A
-                CMP #$30
-                BNE no_clipping_3
-                LDA #0
-  no_clipping_3:  STA @l $000062
-                STA SP03_ADDY_PTR_M
+                ;LDA @l $000062
+                ;INC A
+                ;INC A
+                ;INC A
+                ;INC A
+                ;CMP #$30
+                ;BNE no_clipping_3
+                ;LDA #0
+  ;no_clipping_3:  STA @l $000062
+                ;STA SP03_ADDY_PTR_M
                 ;LDA JOYSTICK0
                 ;JSR UPDATE_DISPLAY
                 RTS
@@ -273,20 +295,27 @@ SOL_INTERRUPT
 ; ****************************************************************
 ; ****************************************************************
 TIMER0_INTERRUPT
+
+
                 .as
-                                                          LDA @l $000066
-                                                          INC A
-                                                          INC A
-                                                          INC A
-                                                          INC A
-                                                          CMP #$30
-                                                          BNE no_clipping_6
-                                                          LDA #0
-                                                          no_clipping_6:  STA @l $000066
-                                                          STA SP06_ADDY_PTR_M
-                                                          LDA @l $000061
-                                                          STA SP07_ADDY_PTR_M
-                JSR VGM_WRITE_REGISTER
+                ;LDA @l $000066
+                ;INC A
+                ;INC A
+                ;INC A
+                ;INC A
+                ;CMP #$30
+                ;BNE no_clipping_6
+                ;LDA #0
+                ;no_clipping_6:  STA @l $000066
+                ;STA SP05_ADDY_PTR_M
+                ;STA SP06_ADDY_PTR_M
+                ;LDA @l $000061
+                ;STA SP07_ADDY_PTR_M
+                ;JSR VGM_WRITE_REGISTER
+                ;LDA #1
+                ;STA @l $000070
+                ;.setal
+
                 RTS
 ;
 ; ///////////////////////////////////////////////////////////////////
@@ -313,16 +342,16 @@ MOUSE_INTERRUPT_2
 MOUSE_INTERRUPT
                 .as
 
-                LDA @l $000065
-                INC A
-                INC A
-                INC A
-                INC A
-                CMP #$30
-                BNE no_clipping_5
-                LDA #0
-                no_clipping_5:  STA @l $000065
-                STA SP05_ADDY_PTR_M
+                ;LDA @l $000065
+                ;INC A
+                ;INC A
+                ;INC A
+                ;INC A
+                ;CMP #$30
+                ;BNE no_clipping_5
+                ;LDA #0
+                ;no_clipping_5:  STA @l $000065
+                ;STA SP05_ADDY_PTR_M
 
 
                 LDA KBD_INPT_BUF
@@ -374,7 +403,19 @@ MOUSE_BUTTON_HANDLER
 
                 LDA @lMOUSE_BUTTONS_REG
                 BEQ MOUSE_CLICK_DONE
+                ;//////////////////////////////////
+                ;/// play a the curent sond if any mouse bution is clicked
+                ;//////////////////////////////////
+                .setal
+                .setxl
+                JSR VGM_SET_SONG_POINTERS
+                .setxs
 
+                .setal
+                PHA
+                LDA #0
+                STA @l DISPLAY_MENUE ; exit the menu
+                PLA
                 ; set the cursor position ( X/8 and Y/8 ) and enable blinking
                 setal
                 CLC
@@ -604,12 +645,12 @@ TEST_MOUSE_MENUE_BUTON:
               CMP #383  ; CREDIT Y max
               BMI TEST_MOUSE_MENUE_BUTON__CREDITS
               ;---------------------------------------- EXIT
-   TEST_MOUSE_MENUE_BUTON__OUT_Temp BRA TEST_MOUSE_MENUE_BUTON__OUT ; no Y position is with in a button shape
+   TEST_MOUSE_MENUE_BUTON__OUT_Temp BRA TEST_MOUSE_MENUE_BUTON__OUT_Temp_2 ; no Y position is with in a button shape
 
    TEST_MOUSE_MENUE_BUTON__PLAY:
               TXA
               CMP #187 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
-              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              BPL TEST_MOUSE_MENUE_BUTON__OUT_Temp_2
               LDA #$0000
               STA @l SPRIT_PIXEL_ADDRESS_START
               LDA #150+32
@@ -618,7 +659,7 @@ TEST_MOUSE_MENUE_BUTON:
    TEST_MOUSE_MENUE_BUTON__LOAD:
               TXA
               CMP #193 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
-              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              BPL TEST_MOUSE_MENUE_BUTON__OUT_Temp_2
               LDA #$4000
               STA @l SPRIT_PIXEL_ADDRESS_START
               LDA #150+32+64
@@ -627,7 +668,7 @@ TEST_MOUSE_MENUE_BUTON:
    TEST_MOUSE_MENUE_BUTON__OPTIONS:
               TXA
               CMP #267 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
-              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              BPL TEST_MOUSE_MENUE_BUTON__OUT_Temp_2
               LDA #$8000
               STA @l SPRIT_PIXEL_ADDRESS_START
               LDA #150+32+64*2
@@ -636,14 +677,23 @@ TEST_MOUSE_MENUE_BUTON:
    TEST_MOUSE_MENUE_BUTON__CREDITS:
               TXA
               CMP #262 ; x max for Play buton                           ; test if the mouse is far enoug from the left side of the screen
-              BPL TEST_MOUSE_MENUE_BUTON__OUT
+              BPL TEST_MOUSE_MENUE_BUTON__OUT_Temp_2
               LDA #$C000
               STA @l SPRIT_PIXEL_ADDRESS_START
               LDA #150+32+64*3
               STA @l SPRIT_Y_SCREEN_START
+              LDA#<>VGM_BUTON_RELEASE;
+              STA @l VGM_FILE_PTR
+              LDA #`VGM_BUTON_RELEASE
+              STA @l VGM_FILE_PTR+2
+              .setas
+              JSR VGM_START
+              .setal
               BRA TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED
-              ; set and reset the mouse crossing area flag
-
+              TEST_MOUSE_MENUE_BUTON__OUT_Temp_2 BRA TEST_MOUSE_MENUE_BUTON__OUT ; no Y position is with in a button shape
+              ;///////////////////////////////////////////////
+              ;/// set and reset the mouse crossing area flag
+              ;///////////////////////////////////////////////
    TEST_MOUSE_MENUE_BUTON__OUT_BUTON_DETECTED:
               LDA @l MOUSE_CROSSING_BUTON_AREA
               CMP #0

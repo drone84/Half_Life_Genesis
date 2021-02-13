@@ -1,29 +1,5 @@
 INIT_DISPLAY
-                .as
-                ; set the display size - 128 x 64
-                ;LDA #128
-                ;STA COLS_PER_LINE
-                ;LDA #64
-                ;STA LINES_MAX
-
-                ; set the visible display size - 80 x 60
-                ;LDA #80
-                ;STA COLS_VISIBLE
-                ;LDA #60
-                ;STA LINES_VISIBLE
-                ;LDA #32
-                ;STA BORDER_X_SIZE
-                ;STA BORDER_Y_SIZE
-
-                ; set the border to purple
-                setas
-                ;LDA #$20
-                ;STA BORDER_COLOR_B
-                ;STA BORDER_COLOR_R
-                ;LDA #0
-                ;STA BORDER_COLOR_G
-
-                ; diable the border
+                .setas
                 LDA #0
                 STA BORDER_CTRL_REG
 
@@ -33,164 +9,31 @@ INIT_DISPLAY
 
                 ; display intro screen
                 ; wait for user to press a key or joystick button
-RTS
+                LDA #0
+                STA @l DISPLAY_MENUE
+
+;RTS
                 .setaxl
                 ; load LUT
-                LDX #<>PALETTE
+                LDX #<>PALETTE_TILE_SET_LEVEL_0 ;PALETTE
                 LDY #<>GRPH_LUT0_PTR
                 LDA #1024
-                MVN <`PALETTE,<`GRPH_LUT0_PTR
+                MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT0_PTR
 
-                LDX #<>PALETTE
+                LDX #<>SPRIT_GORDON_SCIENTIST_PAL
                 LDY #<>GRPH_LUT1_PTR
                 LDA #1024
-                MVN <`PALETTE,<`GRPH_LUT1_PTR
-RTS
+                MVN <`SPRIT_GORDON_SCIENTIST_PAL,<`GRPH_LUT1_PTR
+;RTS
                 LDX #<>PALETTE_TILE_SET_LEVEL_0
                 LDY #<>GRPH_LUT2_PTR
                 LDA #1024
                 MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT2_PTR
 
-                LDX #<>SPRIT_GORDON_SCIENTIST_PAL
+                LDX #<>PLAYER_1_PAL
                 LDY #<>GRPH_LUT3_PTR
                 LDA #1024
-                MVN <`SPRIT_GORDON_SCIENTIST_PAL,<`GRPH_LUT3_PTR
-RTS
-                ; load the tiles pixel extracted from the BMP to the VRAM from @B0:0000
-                ; Load the Pixel
-                ;---------------------- B0
-                setaxl
-                LDX #<>TILE_SET_LEVEL_0_PIXEL+1
-                LDY #0
-                LDA #$8000 ; 256 * 128 - this is 8 rows of tiles
-                MVN <`TILE_SET_LEVEL_0_PIXEL,$B0
-
-                ; load the strit pixel extracted from the BMP to the VRAM from @B1:0000
-                ; Load the Pixel
-                ;---------------------- B1
-                setaxl
-                LDX #<>SPRIT_GORDON_SCIENTIST_PIXEL+1
-                LDY #0
-                LDA #$0400 ; 32 * 32
-                MVN <`SPRIT_GORDON_SCIENTIST_PIXEL,$B1
-
-                ;-----------------------------------------------------------------
-                ;Load the menue graphics
-                ;---------------------- B2
-                setaxl
-                LDA #256
-                STA @l SPRIT_SIZE_TILE_X
-                LDA #64
-                STA @l SPRIT_SIZE_TILE_Y
-                LDA#<>MENU_PLAY + $80000
-                STA @l SPRIT_SRC
-                LDA #`MENU_PLAY + $80000
-                STA @l SPRIT_SRC+2
-                LDA #$0000
-                STA @l SPRIT_DES
-                LDA #$00B2
-                STA @l SPRIT_DES+2
-                JSR LOAD_TILED_SPRITES
-                .setas
-
-
-                LDA #02
-                STA SP01_ADDY_PTR_H
-                STA SP02_ADDY_PTR_H
-                STA SP03_ADDY_PTR_H
-                STA SP04_ADDY_PTR_H
-                STA SP05_ADDY_PTR_H
-                STA SP06_ADDY_PTR_H
-                STA SP07_ADDY_PTR_H
-                STA SP08_ADDY_PTR_H
-                STA SP09_ADDY_PTR_H
-                STA SP10_ADDY_PTR_H
-                STA SP11_ADDY_PTR_H
-                STA SP12_ADDY_PTR_H
-                STA SP13_ADDY_PTR_H
-                STA SP14_ADDY_PTR_H
-                STA SP15_ADDY_PTR_H
-                STA SP16_ADDY_PTR_H
-
-                ; write the position of the sprit on the screen (640x480)
-                .setal
-                LDA #$0
-                STA SP01_X_POS_L
-                LDA #$0
-                STA SP01_Y_POS_L
-                LDA #$20
-                STA SP02_X_POS_L
-                LDA #$0
-                STA SP02_Y_POS_L
-                LDA #$40
-                STA SP03_X_POS_L
-                LDA #$0
-                STA SP03_Y_POS_L
-                LDA #$60
-                STA SP04_X_POS_L
-                LDA #0
-                STA SP04_Y_POS_L
-                LDA #$80
-                STA SP05_X_POS_L
-                LDA #$0
-                STA SP05_Y_POS_L
-                LDA #$A0
-                STA SP06_X_POS_L
-                LDA #$0
-                STA SP06_Y_POS_L
-                LDA #$C0
-                STA SP07_X_POS_L
-                LDA #0
-                STA SP07_Y_POS_L
-                LDA #$E0
-                STA SP08_X_POS_L
-                LDA #0
-                STA SP08_Y_POS_L
-        				LDA #$0
-                STA SP09_X_POS_L
-                LDA #$20
-                STA SP09_Y_POS_L
-                LDA #$20
-                STA SP10_X_POS_L
-                LDA #$20
-                STA SP10_Y_POS_L
-                LDA #$40
-                STA SP11_X_POS_L
-                LDA #$20
-                STA SP11_Y_POS_L
-                LDA #$60
-                STA SP12_X_POS_L
-                LDA #$20
-                STA SP12_Y_POS_L
-                LDA #$80
-                STA SP13_X_POS_L
-                LDA #$20
-                STA SP13_Y_POS_L
-                LDA #$A0
-                STA SP14_X_POS_L
-                LDA #$20
-                STA SP14_Y_POS_L
-                LDA #$C0
-                STA SP15_X_POS_L
-                LDA #$20
-                STA SP15_Y_POS_L
-                LDA #$E0
-                STA SP16_X_POS_L
-                LDA #$20
-                STA SP16_Y_POS_L
-
-
-                ;-----------------------------
-                ; set the position of the selecte menu
-                .setal
-                LDA #64+32
-                STA SPRIT_X_SCREEN_START
-                LDA #150 +10
-                STA SPRIT_Y_SCREEN_START
-                LDA #0
-                STA SPRIT_PIXEL_ADDRESS_START
-
-
+                MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT3_PTR
                 ;-------------------------------------------------------
                 ;- Extract the tile level 0 pixel from the BMP picture -
                 ;-------------------------------------------------------
@@ -210,15 +53,25 @@ RTS
 
                 LDA #`TILE_SET_LEVEL_1_BMP        ; TILES_NB[2]
                 STA BMP_PRSE_SRC_PTR+2
-                LDA #`TILE_SET_LEVEL_0_PIXEL ; write the result on the next page
+                LDA #`TILE_SET_LEVEL_1_PIXEL ; write the result on the next page
                 STA BMP_PRSE_DST_PTR+2
 
                 ; Parse the BMP file to extract the data in a Byte array
                 ; of the picture resolution whide*hight*bpp (byte per pixel)
                 JSL IBMP_PARSER
 
+                ; load the tiles pixel extracted from the BMP to the VRAM from @B0:0000
+                ; Load the Pixel
+                ;---------------------- B0
+                setaxl
+                LDX #<>TILE_SET_LEVEL_1_PIXEL+1
+                LDY #0
+                LDA #$8000 ; 256 * 128 - this is 8 rows of tiles
+                MVN <`TILE_SET_LEVEL_1_PIXEL,$B0
+
+
                 ;-------------------------------------------------------
-                ;- Extract the Sprite Gordon Sientistpixel from the BMP picture -
+                ;- Extract the player pixel from the BMP picture -
                 ;-------------------------------------------------------
                 setas
                 setxl
@@ -226,43 +79,195 @@ RTS
                 STA BMP_POSITION_X
                 STA BMP_POSITION_Y
                 ; load the BMP file source adressv and BMP decoded destination address
-                LDA #>SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[0]
+                LDA #>PLAYER_1        ; TILES_NB[0]
                 STA BMP_PRSE_SRC_PTR
                 STA BMP_PRSE_DST_PTR
 
-                LDA #<SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[1]
+                LDA #<PLAYER_1        ; TILES_NB[1]
                 STA BMP_PRSE_SRC_PTR+1
                 STA BMP_PRSE_DST_PTR+1
 
-                LDA #`SPRIT_GORDON_SCIENTIST_BMP        ; TILES_NB[2]
+                LDA #`PLAYER_1        ; TILES_NB[2]
                 STA BMP_PRSE_SRC_PTR+2
-                LDA #`SPRIT_GORDON_SCIENTIST_PIXEL ; write the result on the next page
+                LDA #`PLAYER_1_PIXEL ; write the result on the next page
                 STA BMP_PRSE_DST_PTR+2
 
                 ; Parse the BMP file to extract the data in a Byte array
                 ; of the picture resolution whide*hight*bpp (byte per pixel)
-                ; JSL IBMP_PARSER dosent seam to work on 32*32
+                JSL IBMP_PARSER
 
 
+                ;-----------------------------------------------------------------
+                ;Load the menue graphics
+                ;---------------------- B2
+                setaxl
+                LDA #256
+                STA @l SPRIT_SIZE_TILE_X
+                LDA #192
+                STA @l SPRIT_SIZE_TILE_Y
+                LDA#<>PLAYER_1_PIXEL
+                STA @l SPRIT_SRC
+                LDA #`PLAYER_1_PIXEL
+                STA @l SPRIT_SRC+2
+                LDA #$0000
+                STA @l SPRIT_DES
+                LDA #$00BC
+                STA @l SPRIT_DES+2
+                JSR LOAD_TILED_SPRITES
 
+                .setal
+                LDA #00 ;SPRIT_PIXEL_ADDRESS_START
+                STA SP01_ADDY_PTR_L
+                ADC #$400
+                STA SP02_ADDY_PTR_L
+                ADC #$400
+                STA SP03_ADDY_PTR_L
+                ADC #$400
+                STA SP04_ADDY_PTR_L
+                ADC #$400
+                STA SP05_ADDY_PTR_L
+                ADC #$400
+                STA SP06_ADDY_PTR_L
+                ADC #$400
+                STA SP07_ADDY_PTR_L
+                ADC #$400
+                STA SP08_ADDY_PTR_L
+                ADC #$400
+                STA SP09_ADDY_PTR_L
+                ADC #$400
+                STA SP10_ADDY_PTR_L
+                ADC #$400
+                STA SP11_ADDY_PTR_L
+                ADC #$400
+                STA SP12_ADDY_PTR_L
+                ADC #$400
+                STA SP13_ADDY_PTR_L
+                ADC #$400
+                STA SP14_ADDY_PTR_L
+                ADC #$400
+                STA SP15_ADDY_PTR_L
+                ADC #$400
+                STA SP16_ADDY_PTR_L
+                LDA #$0C
+                STA SP01_ADDY_PTR_H
+                STA SP02_ADDY_PTR_H
+                STA SP03_ADDY_PTR_H
+                STA SP04_ADDY_PTR_H
+                STA SP05_ADDY_PTR_H
+                STA SP06_ADDY_PTR_H
+                STA SP07_ADDY_PTR_H
+                STA SP08_ADDY_PTR_H
+                STA SP09_ADDY_PTR_H
+                STA SP10_ADDY_PTR_H
+                STA SP11_ADDY_PTR_H
+                STA SP12_ADDY_PTR_H
+                STA SP13_ADDY_PTR_H
+                STA SP14_ADDY_PTR_H
+                STA SP15_ADDY_PTR_H
+                STA SP16_ADDY_PTR_H
 
+                LDX #<>PLAYER_1_PAL
+                LDY #<>GRPH_LUT3_PTR
+                LDA #1024
+                MVN <`PLAYER_1_PAL,<`GRPH_LUT3_PTR
+                .setas
+                ;LDA #0
+                LDA #SPRITE_Enable + SPRITE_LUT3
+                STA SP01_CONTROL_REG
+                STA SP02_CONTROL_REG
+                STA SP03_CONTROL_REG
+                STA SP04_CONTROL_REG
+                STA SP05_CONTROL_REG
+                STA SP06_CONTROL_REG
+                STA SP07_CONTROL_REG
+                STA SP08_CONTROL_REG
+                STA SP09_CONTROL_REG
+                STA SP10_CONTROL_REG
+                STA SP11_CONTROL_REG
+                STA SP12_CONTROL_REG
+                STA SP13_CONTROL_REG
+                STA SP14_CONTROL_REG
+                STA SP15_CONTROL_REG
+                STA SP16_CONTROL_REG
 
+                LDA #$20
+                STA SP01_X_POS_L
+                ADC #32
+                STA SP02_X_POS_L
+                ADC #32
+                STA SP03_X_POS_L
+                ADC #32
+                STA SP04_X_POS_L
+                ADC #32
+                STA SP05_X_POS_L
+                ADC #32
+                STA SP06_X_POS_L
+                ADC #32
+                STA SP07_X_POS_L
+                ADC #32
+                STA SP08_X_POS_L
+                ADC #32
+                STA SP09_X_POS_L
+                ADC #32
+                STA SP10_X_POS_L
+
+                LDA #$80
+                STA SP01_Y_POS_L
+                STA SP02_Y_POS_L
+                STA SP03_Y_POS_L
+                STA SP04_Y_POS_L
+                STA SP05_Y_POS_L
+                STA SP06_Y_POS_L
+                STA SP07_Y_POS_L
+                STA SP08_Y_POS_L
+                STA SP09_Y_POS_L
+                STA SP10_Y_POS_L
+
+                LDA PLAYER_Y
+                STA SP00_Y_POS_L
+
+                ; load LUT0 at the end as the BMP fuction modify it
+                .setaxl
+                LDX #<>PALETTE_TILE_SET_LEVEL_0 ;PALETTE
+                LDY #<>GRPH_LUT0_PTR
+                LDA #1024
+                MVN <`PALETTE_TILE_SET_LEVEL_0,<`GRPH_LUT0_PTR
+
+                ; load the strit pixel extracted from the BMP to the VRAM from @B1:0000
+                ; Load the Pixel
+                ;---------------------- B1
+                setaxl
+                LDX #<>SPRIT_GORDON_SCIENTIST_PIXEL+1
+                LDY #0
+                LDA #$0400 ; 32 * 32
+                MVN <`SPRIT_GORDON_SCIENTIST_PIXEL,$B1
 
                 ; enable the tile engine 0
                 setas
-                LDA #TILE_Enable + $4 + TILESHEET_256x256_En
-                STA @lTL0_CONTROL_REG
-                STA @lTL1_CONTROL_REG
-                ; enable tiles
-                ;LDA #TILE_Enable + TILESHEET_256x256_En
-                ;STA @lTL0_CONTROL_REG
+
+                LDA #0
+                STA @l TL0_CONTROL_REG
+                STA @l TL1_CONTROL_REG
+                STA @l TL2_CONTROL_REG
+                STA @l TL3_CONTROL_REG
+
+                LDA #TILE_Enable
+                LDA #1
+
+                STA @l TL0_CONTROL_REG
+                ;STA @l TL1_CONTROL_REG
+                STA @l TL2_CONTROL_REG
+                ;STA @l TL3_CONTROL_REG
+
+
 
                 ; load tileset
                 JSR LOAD_TILE_MAP_0
-                JSR LOAD_TILE_MAP_1
+                ;JSR LOAD_TILE_MAP_1 dont contain displayable content for now
+                JSR LOAD_TILE_MAP_2
 
                 ; enable the sprit engine
-                ; set the address of the sprit in the VRAM from VICKY point of vue
+                ; set the address of the sprit in the VRAM from VICKY II point of vue
                 LDA #00
                 STA SP00_ADDY_PTR_L
                 STA SP00_ADDY_PTR_M
@@ -270,13 +275,40 @@ RTS
                 STA SP00_ADDY_PTR_H
                 ; write the position of the sprit on the screen (640x480)
                 setal
-                LDA PLAYER_X
-                STA SP00_X_POS_L
-                LDA PLAYER_Y
-                STA SP00_Y_POS_L
 
+                LDA #640/2
+                STA PLAYER_X
+                STA SP00_X_POS_L
+                STA PLAYER_SPRIT_X
+
+                LDA #480/2
+                STA PLAYER_Y
+                STA SP00_Y_POS_L
+                STA PLAYER_SPRIT_Y
+
+                ; need to make a funcrion to comput the position of ther player
+                ; and tile map
+                LDA #640/2 ; clamp the sprit player position to the middle of the screen
+                STA SP00_X_POS_L
+                LDA #640/2 ; set the position
+                STA PLAYER_X
+                STA PLAYER_SPRIT_X
+                LDA #0 ; player pos - (screen whide)/2
+                STA @l TL0_WINDOW_X_POS_L
+                STA @l TL1_WINDOW_X_POS_L
+                STA @l TL2_WINDOW_X_POS_L
+
+                LDA #480/2 ; clamp the sprit player position to the middle of the screen
+                STA SP00_Y_POS_L
+                LDA #480 ; player pos - (screen whide)/2
+                STA PLAYER_Y
+                STA PLAYER_SPRIT_Y
+                LDA #480/2 ; player pos - (screen whide)/2
+                STA @l TL0_WINDOW_Y_POS_L
+                STA @l TL1_WINDOW_Y_POS_L
+                STA @l TL2_WINDOW_Y_POS_L
                 ; active the sprit 0
-                LDA #SPRITE_Enable +$04
+                LDA # SPRITE_Enable + SPRITE_LUT1
                 STA SP00_CONTROL_REG
 
 
@@ -300,139 +332,292 @@ RTS
 
 LOAD_TILE_MAP_0
                 .setaxl
-                ; the tile map is saved as:
-                ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
-                ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
-                ; @ XX:4B0*X_size*2 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
-                ; comput the Y ofset
-                LDA #40*30 ; tile map size
-                STA @l M0_OPERAND_A
-                LDA @l NB_TILE_MAP_X
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT ; we know how many X block we need to skyp to advamce from one line only
-                STA @l M0_OPERAND_A
-                LDA @l CURENT_TILE_MAP_Y
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT ; now we have the Y offset computed
-                TAX
-                ; Comput the ofset in the X direction
-                LDA #40*30 ; tile map size
-                STA @l M0_OPERAND_A
-                LDA @l CURENT_TILE_MAP_X
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT
-                ; add the to ofset to get the addreess of the right map to load
-                STA @l ADDER_A
-                TXA
-                STA @l ADDER_B
-                LDA @l ADDER_R ; now we have the rightr offset in the tile map
-                ; lets comput the ofset to use with LDA
-                ; BRA LOAD_TILE_MAP_0
-                STA @l ADDER_A
-                LDA #<>game_board_0
-                STA LOAD_TILE_MAP_0_LDA_INSTR+1
-                STA @l ADDER_B
-                LDA @l ADDER_R
-                STA LOAD_TILE_MAP_0_LDA_INSTR+1
+
+                LDA #$00
+                STA @l TL0_START_ADDY_L
+                LDA #$00
+                STA @l TL0_START_ADDY_M
+                LDA #$04
+                STA @l TL0_START_ADDY_H
+
+                LDA #64
+                STA @l TL0_TOTAL_X_SIZE_L
+                LDA #$00    ; The Size of the Map is 64 Tiles Wide
+                STA @l TL0_TOTAL_X_SIZE_H
+                LDA #64
+                STA @l TL0_TOTAL_Y_SIZE_L
+                LDA #$00    ; The Size of the Map is 32 Rows
+                STA @l TL0_TOTAL_Y_SIZE_H
+
+                LDA #$00
+                STA @l TL0_WINDOW_X_POS_L
+                LDA #$00    ; The position of the Window looking in to the MAP is 1 (X)
+                STA @l TL0_WINDOW_X_POS_H
+                LDA #$00
+                STA @l TL0_WINDOW_Y_POS_L
+                LDA #$00  ; The position of the Window Looking in to the the Map 1 (Y)
+                STA @l TL0_WINDOW_Y_POS_H
+                LDA #$08 ; The tile set is a 256x256 and the LUT0
+                ;STA @l TILESET0_ADDY_CFG
                 ; the 16bits ofset is recomputed
                 LDX #0
                 LDY #0
-                setdbr $AF
+                setdbr $B4
                 setas
     GET_TILE_0
-    LOAD_TILE_MAP_0_LDA_INSTR:
-                LDA game_board_0,X
-                STA TILE_MAP0,Y
+                LDA @l TILE_MAP_LAYER_0,X
+                STA $B40000,Y
                 INY
-                setal
-                TYA
-                AND #$3F
-                CMP #40 ; 1 line is 40 tile
-                BNE LT_NEXT_TILE_0
-                TYA
-                CLC
-                ADC #24
-                TAY
-
-    LT_NEXT_TILE_0
-                setas
+                LDA #00 ; LUT0 and Tileset 0
+                STA $B40000,Y
+                INY
                 INX
-                CPX #(640/16) * (480 / 16)
+                CPX #(64) * (64); CPX #(640/16) * (480 / 16)
                 BNE GET_TILE_0
                 RTS
-;
+
+LOAD_TILE_MAP_2
+                .setaxl
+
+                LDA #$00
+                STA @l TL2_START_ADDY_L
+                LDA #$00
+                STA @l TL2_START_ADDY_M
+                LDA #$06
+                STA @l TL2_START_ADDY_H
+
+                LDA #64
+                STA @l TL2_TOTAL_X_SIZE_L
+                LDA #$00    ; The Size of the Map is 64 Tiles Wide
+                STA @l TL2_TOTAL_X_SIZE_H
+                LDA #64
+                STA @l TL2_TOTAL_Y_SIZE_L
+                LDA #$00    ; The Size of the Map is 32 Rows
+                STA @l TL2_TOTAL_Y_SIZE_H
+
+                LDA #$00
+                STA @l TL2_WINDOW_X_POS_L
+                LDA #$00    ; The position of the Window looking in to the MAP is 1 (X)
+                STA @l TL2_WINDOW_X_POS_H
+                LDA #$00
+                STA @l TL2_WINDOW_Y_POS_L
+                LDA #$00  ; The position of the Window Looking in to the the Map 1 (Y)
+                STA @l TL2_WINDOW_Y_POS_H
+                LDA #$08 ; The tile set is a 256x256 and the LUT0
+                STA @l TILESET0_ADDY_CFG
+                ; the 16bits ofset is recomputed
+                LDX #0
+                LDY #0
+                setdbr $B6
+                setas
+    GET_TILE_2
+                LDA @l TILE_MAP_LAYER_2,X
+                STA $B60000,Y
+                INY
+                LDA #00 ; LUT0 and Tileset 0
+                STA $B60000,Y
+                INY
+                INX
+                CPX #(64) * (64); CPX #(128) * (60)
+                BNE GET_TILE_2
+                RTS
 ; *********************************************************
 ; * Copy the Tile map into the tile map register area
 ; *********************************************************
+
 LOAD_TILE_MAP_1
                 .setaxl
-                ; the tile map is saved as:
-                ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
-                ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
-                ; @ XX:4B0*X_size*2 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
-                ; comput the Y ofset
-                LDA #40*30 ; tile map size
-                STA @l M0_OPERAND_A
-                LDA @l NB_TILE_MAP_X
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT ; we know how many X block we need to skyp to advamce from one line only
-                STA @l M0_OPERAND_A
-                LDA @l CURENT_TILE_MAP_Y
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT ; now we have the Y offset computed
-                TAX
-                ; Comput the ofset in the X direction
-                LDA #40*30 ; tile map size
-                STA @l M0_OPERAND_A
-                LDA @l CURENT_TILE_MAP_X
-                STA @l M0_OPERAND_B
-                LDA @l M0_RESULT
-                ; add the to ofset to get the addreess of the right map to load
-                STA @l ADDER_A
-                TXA
-                STA @l ADDER_B
-                LDA @l ADDER_R ; now we have the rightr offset in the tile map
-                ; lets comput the ofset to use with LDA
-                ; BRA LOAD_TILE_MAP_0
-                STA @l ADDER_A
-                LDA #<>game_board_1
-                STA LOAD_TILE_MAP_1_LDA_INSTR+1
-                STA @l ADDER_B
-                LDA @l ADDER_R
-                STA LOAD_TILE_MAP_1_LDA_INSTR+1
+
+                LDA #$00
+                STA @l TL1_START_ADDY_L
+                LDA #$00
+                STA @l TL1_START_ADDY_M
+                LDA #$05
+                STA @l TL1_START_ADDY_H
+
+                LDA #40
+                STA @l TL1_TOTAL_X_SIZE_L
+                LDA #$00    ; The Size of the Map is 64 Tiles Wide
+                STA @l TL1_TOTAL_X_SIZE_H
+                LDA #30
+                STA @l TL1_TOTAL_Y_SIZE_L
+                LDA #$00    ; The Size of the Map is 32 Rows
+                STA @l TL1_TOTAL_Y_SIZE_H
+
+                LDA #$20
+                STA @l TL1_WINDOW_X_POS_L
+                LDA #$00    ; The position of the Window looking in to the MAP is 1 (X)
+                STA @l TL1_WINDOW_X_POS_H
+                LDA #$00
+                STA @l TL1_WINDOW_Y_POS_L
+                LDA #$00  ; The position of the Window Looking in to the the Map 1 (Y)
+                STA @l TL1_WINDOW_Y_POS_H
+
+                LDA #$08 ; The tile set is a 256x256 and the LUT0
+                STA @l TILESET0_ADDY_CFG
                 ; the 16bits ofset is recomputed
                 LDX #0
                 LDY #0
-                setdbr $AF
+                setdbr $B5
                 setas
     GET_TILE_1
-    LOAD_TILE_MAP_1_LDA_INSTR:
-                LDA game_board_1,X
-                STA TILE_MAP1,Y
+                LDA @l TILE_MAP_LAYER_1,X ; first layer (floor rail etc)
+                STA $B50000,Y
                 INY
-                setal
-                TYA
-                AND #$3F
-                CMP #40 ; 1 line is 40 tile
-                BNE LT_NEXT_TILE_1
-                TYA
-                CLC
-                ADC #24
-                TAY
-
-    LT_NEXT_TILE_1
-                setas
+                LDA #$00 ; LUT0 and Tileset 0
+                STA $B50000,Y
+                INY
                 INX
                 CPX #(640/16) * (480 / 16)
                 BNE GET_TILE_1
                 RTS
+
+; LOAD_TILE_MAP_1_old
+;                 .setaxl
+;                 ; the tile map is saved as:
+;                 ; @ XX:4B0*X_size*0 : X0:Y0 X1:Y0 X2:Y0 X3:Y0
+;                 ; @ XX:4B0*X_size*1 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+;                 ; @ XX:4B0*X_size*2 : X0:Y1 X1:Y1 X2:Y1 X3:Y1
+;                 ; comput the Y ofset
+;                 LDA #40*30 ; tile map size
+;                 STA @l M0_OPERAND_A
+;                 LDA @l NB_TILE_MAP_X
+;                 STA @l M0_OPERAND_B
+;                 LDA @l M0_RESULT ; we know how many X block we need to skyp to advamce from one line only
+;                 STA @l M0_OPERAND_A
+;                 LDA @l CURENT_TILE_MAP_Y
+;                 STA @l M0_OPERAND_B
+;                 LDA @l M0_RESULT ; now we have the Y offset computed
+;                 TAX
+;                 ; Comput the ofset in the X direction
+;                 LDA #40*30 ; tile map size
+;                 STA @l M0_OPERAND_A
+;                 LDA @l CURENT_TILE_MAP_X
+;                 STA @l M0_OPERAND_B
+;                 LDA @l M0_RESULT
+;                 ; add the to ofset to get the addreess of the right map to load
+;                 STA @l ADDER_A
+;                 TXA
+;                 STA @l ADDER_B
+;                 LDA @l ADDER_R ; now we have the rightr offset in the tile map
+;                 ; lets comput the ofset to use with LDA
+;                 ; BRA LOAD_TILE_MAP_0
+;                 STA @l ADDER_A
+;                 LDA #<>game_board_1
+;                 STA LOAD_TILE_MAP_1_LDA_INSTR_old+1
+;                 STA @l ADDER_B
+;                 LDA @l ADDER_R
+;                 STA LOAD_TILE_MAP_1_LDA_INSTR_old+1
+;                 ; the 16bits ofset is recomputed
+;                 LDX #0
+;                 LDY #0
+;                 setdbr $AF
+;                 setas
+;     GET_TILE_1_old
+;     LOAD_TILE_MAP_1_LDA_INSTR_old:
+;                 LDA game_board_1,X
+;                 STA TILE_MAP1,Y
+;                 INY
+;                 setal
+;                 TYA
+;                 AND #$3F
+;                 CMP #40 ; 1 line is 40 tile
+;                 BNE LT_NEXT_TILE_1_old
+;                 TYA
+;                 CLC
+;                 ADC #24
+;                 TAY
+;
+;     LT_NEXT_TILE_1_old
+;                 setas
+;                 INX
+;                 CPX #(640/16) * (480 / 16)
+;                 BNE GET_TILE_1_old
+;                 RTS
+
+; *************************************************************
+; Will compare the tilemap 2 against the player position to make sure the player
+; can move towart the direction requested by the keyboard
+; *************************************************************
+
+TEST_PLAYER_MOUVEMENT_TILE_X_SIXE .word 64
+TEST_PLAYER_MOUVEMENT_TILE_Y_SIXE .word 64
+
+TEST_PLAYER_MOUVEMENT_X
+                .setaxl
+                ; convert the player Y position to tile ofset
+                PHA
+                LDA @l PLAYER_Y
+                LSR
+                LSR
+                LSR
+                LSR
+                ; comput the linera ofset to get the tile type the player is/will be on
+                STA @l UNSIGNED_MULT_A_LO
+                LDA @l TEST_PLAYER_MOUVEMENT_TILE_X_SIXE
+                STA @l UNSIGNED_MULT_B_LO
+
+                LDA @l UNSIGNED_MULT_AL_LO
+                STA @l ADDER32_A_LL
+                LDA @l UNSIGNED_MULT_AH_LO
+                STA @l ADDER32_A_HL
+                ; convert the player X position to tile ofset
+                PLA
+                ;LDA @l PLAYER_X
+                LSR
+                LSR
+                LSR
+                LSR
+                STA @l ADDER32_B_LL
+                LDA #0000
+                STA @l ADDER32_B_HL
+
+                LDA @l ADDER32_R_LL
+                TAX
+                LDA TILE_MAP_MOVEMENT,X
+                AND #$FF
+                RTS
+
+TEST_PLAYER_MOUVEMENT_Y
+                .setaxl
+                ; convert the player Y position to tile ofset
+                ;LDA @l PLAYER_Y
+                LSR
+                LSR
+                LSR
+                LSR
+                ; comput the linera ofset to get the tile type the player is/will be on
+                STA @l UNSIGNED_MULT_A_LO
+                LDA @l TEST_PLAYER_MOUVEMENT_TILE_X_SIXE
+                STA @l UNSIGNED_MULT_B_LO
+
+                LDA @l UNSIGNED_MULT_AL_LO
+                STA @l ADDER32_A_LL
+                LDA @l UNSIGNED_MULT_AH_LO
+                STA @l ADDER32_A_HL
+                ; convert the player X position to tile ofset
+                LDA @l PLAYER_X
+                LSR
+                LSR
+                LSR
+                LSR
+                STA @l ADDER32_B_LL
+                LDA #0000
+                STA @l ADDER32_B_HL
+
+                LDA @l ADDER32_R_LL
+                TAX
+                LDA TILE_MAP_MOVEMENT,X
+                AND #$FF
+                RTS
+
 ; *************************************************************
 ; Load tiled sprite in VRAM
 ; *************************************************************
 ; input
 SPRIT_SIZE_TILE_X .word $0 ; the size of the picture in pixel
 SPRIT_SIZE_TILE_Y .word $0
-SPRIT_SRC .dword 0        ; address where to get and load the sata
+SPRIT_SRC .dword 0        ; address where to get and load the data
 SPRIT_DES .dword 0
 
 ; variable to reset / set every time the function is used
@@ -675,10 +860,10 @@ INIT_PLAYER
                 setal
                 LDA #8 * 32 + 32
                 STA PLAYER_X
-                STA @lSP15_X_POS_L
+                STA @l SP15_X_POS_L
                 LDA #10 * 32 + 64
                 STA PLAYER_Y
-                STA @lSP15_Y_POS_L
+                STA @l SP15_Y_POS_L
                 setas
                 RTS
 
@@ -707,16 +892,44 @@ INIT_NPC
                 RTS
 
 ; ****************************************************
-; * A contains the joystick byte
+; * Determine the movement to do
 ; ****************************************************
+JOYSTICK_VAL .word 0
 UPDATE_DISPLAY
-                .as
-                ;PHA
-                ;JSR UPDATE_HOME_TILES
-                ;JSR UPDATE_WATER_TILES
-                ;PLA
                 setal
+                LDA JOYSTICK0
+                AND #$1F
+                CMP #$1F
+                BNE JOYSTICK_NOT_DONE
+                BRL JOYSTICK_DONE
+JOYSTICK_NOT_DONE:
+                LDA JOYSTICK0
+                STA JOYSTICK_VAL
+                AND #$04              ; Check what value is cleared
+                CMP #$00
+                BNE JOYSTICK_TEST_RIGHT
+                JSR PLAYER_MOVE_LEFT
+JOYSTICK_TEST_RIGHT:
+                LDA JOYSTICK_VAL
+                AND #$08
+                CMP #$00
+                BNE JOYSTICK_TEST_UP
+                JSR PLAYER_MOVE_RIGHT
+JOYSTICK_TEST_UP:
+                LDA JOYSTICK_VAL
+                AND #$01
+                CMP #$00
+                BNE JOYSTICK_TEST_DOWN
+                JSR PLAYER_MOVE_UP
+JOYSTICK_TEST_DOWN:
+                LDA JOYSTICK_VAL
+                AND #$02
+                CMP #$00
+                BNE JOYSTICK_DONE
+                JSR PLAYER_MOVE_DOWN
 
+
+JOYSTICK_DONE:
         JOY_UP
                 LDA PLAYER_Y_MOV
                 CMP #1 ; up
@@ -801,396 +1014,197 @@ UPDATE_NPC_POSITIONS
 ; ********************************************
 ; * Player movements
 ; ********************************************
-PLAYER_MOVE_DOWN
-                .al
-                LDA @l PLAYER_Y
-                CLC
-                ADC #2
-                ; check for collisions and out of screen
-                CMP #480 - 32
-                BCC PMD_DONE
-                ; load the new tile map and replace the player
-                LDA @l CURENT_TILE_MAP_Y;
-                CLC
-                ADC #1
-                CMP NB_TILE_MAP_Y
-                BNE PMD_NO_NEED_TO_CLEEP
-                SEC
-                SBC #1
-        PMD_NO_NEED_TO_CLEEP:
-                STA @l CURENT_TILE_MAP_Y;
-                .setal
-                JSR LOAD_TILE_MAP_0
-                .setal
-                JSR LOAD_TILE_MAP_1
-                LDA #2 ;LDA #480 - 32 ; the lowest position on screen
-        PMD_DONE
-                STA @l PLAYER_Y
-                STA @l SP00_Y_POS_L
-                RTS
 
 PLAYER_MOVE_UP
+                .setal
                 LDA @l PLAYER_Y
                 SEC
-                SBC #2
-                ; check for collisions and out of screen
-                CMP #02
-                BCS PMU_DONE
-                ; load the new tile map and replace the player
-                LDA @l CURENT_TILE_MAP_Y;
+                SBC #2 ;; need to test here if we can move then comput the position of th eplayer
+                PHA
+                JSR TEST_PLAYER_MOUVEMENT_Y
+                CMP #0
+                BEQ PMU_PLAYER_CAN_MOVE
+                PLA ; dont do anyting player stuck against a wall/door etc
+                RTS
+       PMU_PLAYER_CAN_MOVE:
+                PLA
+                CMP #(64*16) - (480/2)  ; make sure we can go bacl on the center
+                BCC PMU_TEST_MOVING_AREA      ; of the screen if we are all the way on the botum
+                STA @l PLAYER_Y
+                CLC
+                ADC #(480)
                 SEC
-                SBC #1
-                CMP #$FFFF
-                BNE PMU_NO_NEED_TO_CLEEP
-                LDA #0
-       PMU_NO_NEED_TO_CLEEP:
-                STA @l CURENT_TILE_MAP_Y;
+                SBC #(64*16)
+                STA @l SP00_Y_POS_L
+                RTS
+       PMU_TEST_MOVING_AREA:
+                CMP #480/2
+                BCC PMU_TEST_SCREEN_COLISION ;
+                STA @l PLAYER_Y
+                SEC
+                SBC #(480/2)
+                AND #$3FFF  ; 9 Byte only for the movement , the scrol part seam to move the tile map on the wrong axes
+                STA @l TL0_WINDOW_Y_POS_L
+                STA @l TL1_WINDOW_Y_POS_L
+                STA @l TL2_WINDOW_Y_POS_L
+                LDA #(480/2)
+                STA @l SP00_Y_POS_L
+                RTS
+       PMU_TEST_SCREEN_COLISION:
+                ; check for collisions and out of screen
+                CMP #02+32 ; need to be at least bigger that 2 to be sure PLAYER_Y dont fo in the negatif (0xFFFx)
+                BCS PMU_MOVE_SPRIT ;
+                RTS
+       PMU_MOVE_SPRIT:
+                ; we are inbeetween the end/start of the tile map and the midle
+                ; of the screen so move the sprit instead of the tile map
+                STA @l SP00_Y_POS_L
+                STA @l PLAYER_Y
+                RTS
+; ********************************************
+PLAYER_MOVE_DOWN
                 .setal
-                JSR LOAD_TILE_MAP_0
-                .setal
-                JSR LOAD_TILE_MAP_1
-                .setal
-                LDA #480 - 32; LDA #02
-
-        PMU_DONE
+                LDA @l PLAYER_Y
+                CLC
+                ADC #2 ;; need to test here if we can move then comput the position of th eplayer
+                PHA
+                JSR TEST_PLAYER_MOUVEMENT_Y
+                CMP #0
+                BEQ PMD_PLAYER_CAN_MOVE
+                PLA ; dont do anyting player stuck against a wall/door etc
+                RTS
+       PMD_PLAYER_CAN_MOVE:
+                PLA
+                CMP #480/2
+                BCS PMD_TEST_MOVING_AREA ;
                 STA @l PLAYER_Y
                 STA @l SP00_Y_POS_L
                 RTS
-
-PLAYER_MOVE_RIGHT
-                LDA @l PLAYER_X
-                CLC
-                ADC #2
-                ; check for collisions and out of screen
-                CMP #640-16
-                BCC PMR_DONE
-                ; load the new tile map and replace the player
-                LDA @l CURENT_TILE_MAP_X;
-                CLC
-                ADC #1
-                CMP NB_TILE_MAP_X
-                BNE PMR_NO_NEED_TO_CLEEP
+       PMD_TEST_MOVING_AREA:
+                CMP #(64*16) - (480/2)
+                BCS PMD_TEST_SCREEN_COLISION ;
+                STA @l PLAYER_Y
                 SEC
-                SBC #1
-       PMR_NO_NEED_TO_CLEEP:
-                STA @l CURENT_TILE_MAP_X;
-                .setal
-                JSR LOAD_TILE_MAP_0
-                .setal
-                JSR LOAD_TILE_MAP_1
-                .setal
-                LDA #2 ;LDA #640-16 ; the lowest position on screen
-
-        PMR_DONE
-                STA @l PLAYER_X
-                STA @l SP00_X_POS_L
+                SBC #(480/2)
+                AND #$3FFF  ; 9 Byte only for the movement , the scrol part seam to move the tile map on the wrong axes
+                STA @l TL0_WINDOW_Y_POS_L
+                STA @l TL1_WINDOW_Y_POS_L
+                STA @l TL2_WINDOW_Y_POS_L
+                LDA #(480/2)
+                STA @l SP00_Y_POS_L
                 RTS
-
+       PMD_TEST_SCREEN_COLISION:
+                ; check for collisions and out of screen
+                CMP  #(64*16)
+                BCC PMD_MOVE_SPRIT ;
+                RTS
+       PMD_MOVE_SPRIT:
+                ; we are inbeetween the end/start of the tile map and the midle
+                ; of the screen so move the sprit instead of the tile map
+                STA @l PLAYER_Y
+                CLC
+                ADC #(480)
+                SEC
+                SBC #(64*16)
+                STA @l SP00_Y_POS_L
+                RTS
+; ********************************************
 PLAYER_MOVE_LEFT
+                .setal
                 LDA @l PLAYER_X
                 SEC
                 SBC #2
-                ; check for collisions and out of screen
-                CMP #02
-                BCS PML_DONE
-                ; load the new tile map and replace the player
-                LDA @l CURENT_TILE_MAP_X;
-                SEC
-                SBC #1
-                CMP #$FFFF
-                BNE PLAYER_MOVE_LEFT_NO_NEED_TO_CLEEP
-                LDA #0
-       PLAYER_MOVE_LEFT_NO_NEED_TO_CLEEP:
-                STA @l CURENT_TILE_MAP_X;
-                .setal
-                JSR LOAD_TILE_MAP_0
-                .setal
-                JSR LOAD_TILE_MAP_1
-                .setal
-                LDA #640 - 32; LDA #02
-
-        PML_DONE
+                PHA
+                JSR TEST_PLAYER_MOUVEMENT_X
+                CMP #0
+                BEQ PML_PLAYER_CAN_MOVE
+                PLA ; dont do anyting player stuck against a wall/door etc
+                RTS
+       PML_PLAYER_CAN_MOVE:
+                PLA
+                CMP #(64*16) - (640/2)
+                BCC PML_TEST_MOVING_AREA ;
                 STA @l PLAYER_X
+                CLC
+                ADC #(640)
+                SEC
+                SBC #(64*16)
+                STA @l SP00_X_POS_L
+                RTS
+       PML_TEST_MOVING_AREA:
+                CMP #640/2
+                BCC PML_TEST_SCREEN_COLISION ;
+                STA @l PLAYER_X
+                SEC
+                SBC #(640/2)
+                AND #$3FFF  ; 9 Byte only for the movement , the scrol part seam to move the tile map on the wrong axes
+                STA @l TL0_WINDOW_X_POS_L
+                STA @l TL1_WINDOW_X_POS_L
+                STA @l TL2_WINDOW_X_POS_L
+                LDA #(640/2)
+                STA @l SP00_X_POS_L
+                RTS
+       PML_TEST_SCREEN_COLISION:
+                ; check for collisions and out of screen
+                CMP #02+32
+                BCS PML_MOVE_SPRIT ;
+                RTS
+       PML_MOVE_SPRIT:
+                ; we are inbeetween the end/start of the tile map and the midle
+                ; of the screen so move the sprit instead of the tile map
+                STA @l SP00_X_POS_L
+                STA @l PLAYER_X
+                RTS
+
+; ********************************************
+PLAYER_MOVE_RIGHT
+                .setal
+                LDA @l PLAYER_X
+                CLC
+                ADC #2
+                PHA
+                JSR TEST_PLAYER_MOUVEMENT_X
+                CMP #0
+                BEQ PMR_PLAYER_CAN_MOVE
+                PLA ; dont do anyting player stuck against a wall/door etc
+                RTS
+       PMR_PLAYER_CAN_MOVE:
+                PLA
+                CMP #640/2
+                BCS PMR_TEST_MOVING_AREA ;
+                STA @l SP00_X_POS_L
+                STA @l PLAYER_X
+                RTS
+       PMR_TEST_MOVING_AREA:
+                ; check for collisions and out of screen
+                CMP #(64*16) - (640/2)
+                BCS PMR_TEST_SCREEN_COLISION ;
+                STA @l PLAYER_X
+                SEC
+                SBC #(640/2)
+                AND #$3FFF  ; 9 Byte only for the movement , the scrol part seam to move the tile map on the wrong axes
+                STA @l TL0_WINDOW_X_POS_L
+                STA @l TL1_WINDOW_X_POS_L
+                STA @l TL2_WINDOW_X_POS_L
+                LDA #(640/2)
+                STA @l SP00_X_POS_L
+                RTS
+       PMR_TEST_SCREEN_COLISION:
+                ; check for collisions and out of screen
+                CMP  #(64*16)
+                BCC PMR_MOVE_SPRIT ;
+                RTS
+       PMR_MOVE_SPRIT:
+                ; we are inbeetween the end/start of the tile map and the midle
+                ; of the screen so move the sprit instead of the tile map
+                STA @l PLAYER_X
+                CLC
+                ADC #(640)
+                SEC
+                SBC #(64*16)
                 STA @l SP00_X_POS_L
                 RTS
 
-; *****************************************************************
-; * Compare the location of each sprite with the player's position
-; * Sprites are 32 x 32 so the math is pretty simple.
-; * Collisions occur with cars and buses and with water.
-; * Frog can hop on logs.
-; *****************************************************************
-COLLISION_CHECK
-                .as
-                setal
-                LDA PLAYER_Y
-                CMP #256 ; mid-screen
-
-                BCC WATER_COLLISION
-                JSR STREET_COLLISION
-                setas
-                RTS
-
-        WATER_COLLISION
-                .al
-        ; here do the water collision routine
-                CMP #224
-                BCS CCW_DONE
-
-                CMP #128
-                BCC HOME_LINE
-
-                LDX #0
-
-        NEXT_WATER_ROW
-                LDA game_array+4,X  ; read the Y position
-                CMP PLAYER_Y
-                BNE CCW_CONTINUE
-
-                LDA PLAYER_X
-                CMP game_array+2,X  ; read the X position
-                BEQ FLOAT
-                BCC CHECK_RIGHT_BOUND_W
-        CHECK_LEFT_BOUND_W
-                LDA game_array+2,X
-                ADC #32
-                CMP PLAYER_X
-                BCS FLOAT
-                BRA CCW_CONTINUE
-        CHECK_RIGHT_BOUND_W
-                ADC #32
-                CMP game_array+2,X  ; read the X position
-                BCS FLOAT
-
-
-        CCW_CONTINUE
-                TXA
-                CLC
-                ADC #8
-                TAX
-                CPX #8*16-8
-                BNE NEXT_WATER_ROW
-                BRA COLLISION
-
-        CCW_DONE
-                setas
-                RTS
-
-        FLOAT
-                .al
-                ; move the frog with the NPC
-                CLC
-                LDA PLAYER_X
-                ADC game_array,X
-                CMP #32
-                BCC COLLISION
-                CMP #640-32
-                BCS COLLISION
-
-                STA PLAYER_X
-                STA SP15_X_POS_L
-                setas
-                RTS
-
-        HOME_LINE
-                .al
-                LDA PLAYER_X
-                LSR
-                LSR
-                LSR
-                LSR ; divide by 16
-                TAX
-                setas
-                LDA game_board + 280,X
-                AND #$FF
-                CMP #'H'
-                BNE COLLISION
-
-                setas
-                RTS
-
-        COLLISION
-                .al
-                ; restart the player at first row
-                setas
-                JSR INIT_PLAYER
-                RTS
-
-STREET_COLLISION
-                .al
-                LDX #0
-        NEXT_STREET_ROW
-                LDA game_array+4,X  ; read the Y position
-                CMP PLAYER_Y
-                BNE CCS_CONTINUE
-
-                LDA PLAYER_X
-                CMP game_array+2,X  ; read the X position
-
-                BEQ COLLISION
-                BCC CHECK_RIGHT_BOUND
-        CHECK_LEFT_BOUND
-                LDA game_array+2,X
-                ADC #32
-                CMP PLAYER_X
-                BCS COLLISION
-                BRA CCS_CONTINUE
-
-        CHECK_RIGHT_BOUND
-                ADC #32
-                CMP game_array+2,X  ; read the X position
-                BCS COLLISION
-
-        CCS_CONTINUE
-                TXA
-                CLC
-                ADC #8
-                TAX
-                CPX #8*16-8
-                BNE NEXT_STREET_ROW
-        CC_DONE
-                setas
-                RTS
-
-HOME_CYCLE      .byte 0
-EVEN_TILE_VAL   .byte $12
-ODD_TILE_VAL    .byte $13
-UPDATE_HOME_TILES
-                .as
-                ; alternate the HOME tiles to imitate wind motion
-                LDA HOME_CYCLE
-                INC A
-                CMP #15 ; only update every N SOF cycle
-                BNE UT_SKIP
-                LDA #0
-                STA HOME_CYCLE
-
-                LDX #280 ; line 8 in the game board`
-                LDY #7 * 64 ; line 8 in the tileset
-                setdbr $AF
-
-        UT_GET_TILE
-                LDA game_board,X
-                CMP #'H'
-                BNE UT_DONE
-
-                TXA
-                AND #1
-                BEQ UT_EVEN_TILE
-                LDA EVEN_TILE_VAL
-
-                STA TILE_MAP0,Y
-                BRA UT_DONE
-
-        UT_EVEN_TILE
-                LDA ODD_TILE_VAL
-                STA TILE_MAP0,Y
-
-        UT_DONE
-                INY
-                INX
-                CPX #320
-                BNE UT_GET_TILE
-
-                ; alternate the tiles
-                LDA EVEN_TILE_VAL
-                CMP #$12
-                BEQ ALT_ODD
-                ; A is $13
-                STA ODD_TILE_VAL
-                LDA #$12
-                STA EVEN_TILE_VAL
-                RTS
-
-        ALT_ODD
-                ; A is 12
-                STA ODD_TILE_VAL
-                LDA #$13
-                STA EVEN_TILE_VAL
-
-                RTS
-
-    UT_SKIP
-                STA HOME_CYCLE
-                RTS
-
-
-
-WATER_CYCLE     .byte 0
-EVEN_WTILE_VAL  .byte $4
-ODD_WTILE_VAL   .byte $14
-UPDATE_WATER_TILES
-                .as
-                ; alternate the HOME tiles to imitate wind motion
-                LDA WATER_CYCLE
-                INC A
-                CMP #12 ; only update every N SOF cycle
-                BNE UW_SKIP
-                LDA #0
-                STA WATER_CYCLE
-
-                LDX #8 * 40 ; line 9 in the game board`
-                LDY #8 * 64 ; line 8 in the tileset
-                setdbr $AF
-
-        UW_GET_TILE
-                LDA game_board,X
-                CMP #'W'
-                BNE UW_DONE
-
-                ;check if X is even/odd
-                TXA
-                AND #1
-                BEQ UW_EVEN_TILE
-                LDA EVEN_WTILE_VAL
-
-                STA TILE_MAP0,Y
-                BRA UW_DONE
-
-        UW_EVEN_TILE
-                LDA ODD_WTILE_VAL
-                STA TILE_MAP0,Y
-
-        UW_DONE
-                INY
-                setal
-                TYA
-                AND #$3F
-                CMP #40
-                BNE WT_NEXT_TILE
-                TYA
-                CLC
-                ADC #24
-                TAY
-
-    WT_NEXT_TILE
-                setas
-
-                INX
-                CPX #14 * 40
-                BNE UW_GET_TILE
-
-                ; alternate the tiles
-                LDA EVEN_WTILE_VAL
-                CMP #4
-                BEQ W_ALT_ODD
-                ; A is $14
-                STA ODD_WTILE_VAL
-                LDA #$4
-                STA EVEN_WTILE_VAL
-                RTS
-
-        W_ALT_ODD
-                ; A is 4
-                STA ODD_WTILE_VAL
-                LDA #$14
-                STA EVEN_WTILE_VAL
-
-                RTS
-
-    UW_SKIP
-                STA WATER_CYCLE
-                RTS
 ; ****************************************************
 ; * Write a Hex Value to the position specified by Y
 ; * Y contains the screen position
@@ -1234,94 +1248,6 @@ WRITE_HEX
         PLA
                 RTS
 
-; *********************************************************
-; * Convert the game_board to a tile set
-; *********************************************************
-LOAD_TILESET
-                LDX #0
-                LDY #0
-                setdbr $AF
-                setas
-    GET_TILE
-                LDA game_board,X
-
-        ;DOT
-                CMP #$2e ; #'.'
-                BNE GRASS
-                LDA #0
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        GRASS
-                CMP #'G'
-                BNE HOME
-                LDA #2
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        HOME
-                CMP #'H'
-                BNE WATER
-
-                TXA
-                AND #1
-                BEQ EVEN_TILE
-                LDA #$13
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-            EVEN_TILE
-                LDA #$12
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        WATER
-                CMP #'W'
-                BNE CONCRETE
-                LDA #4
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        CONCRETE
-                CMP #'C'
-                BNE ASHPHALT
-                LDA #1
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        ASHPHALT
-                CMP #'A'
-                BNE DIRT
-                LDA #5
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-        DIRT
-                CMP #'D'
-                BNE LT_DONE
-                LDA #3
-                STA TILE_MAP0,Y
-                BRA LT_DONE
-
-    LT_DONE
-                INY
-                setal
-                TYA
-                AND #$3F
-                CMP #40
-                BNE LT_NEXT_TILE
-                TYA
-                CLC
-                ADC #24
-                TAY
-
-    LT_NEXT_TILE
-                setas
-                INX
-                CPX #(640/16) * (480 / 16)
-                BNE GET_TILE
-                RTS
-
 ; our resolution is 640 x 480 - tiles are 16 x 16 - therefore 40 x 30
 NB_TILE_MAP_X .word $3; will be updatad by the code the day I will load the map from the SD or IDE
 NB_TILE_MAP_Y .word $2
@@ -1329,46 +1255,13 @@ CURENT_TILE_MAP_X .word $0
 CURENT_TILE_MAP_Y .word $0
 
 
-game_board
-;* = $164C00
-game_board_0
-game_board_0__00_00
-.binary "assets/HL_V2_Tile_map_layer_1__00_00.map"
-* = game_board_0 + 40*30*1
-game_board_0__00_01
-.binary "assets/HL_V2_Tile_map_layer_1__00_01.map"
-* = game_board_0 + 40*30*2
-game_board_0__00_02
-.binary "assets/HL_V2_Tile_map_layer_1__00_02.map"
-
-* = game_board_0 + 40*30*3
-game_board_0__01_00
-.binary "assets/HL_V2_Tile_map_layer_1__01_00.map"
-* = game_board_0 + 40*30*4
-game_board_0__01_01
-.binary "assets/HL_V2_Tile_map_layer_1__01_01.map"
-* = game_board_0 + 40*30*5
-game_board_0__01_02
-.binary "assets/HL_V2_Tile_map_layer_1__01_02.map"
-
-
-
-* = game_board_0 + 40*30*6
-game_board_1
-.binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
-* = game_board_1 + 40*30*1
-.binary "assets/HL_V2_Tile_map_layer_0__01_00.map"
-* = game_board_1 + 40*30*2
-.binary "assets/HL_V2_Tile_map_layer_0__00_00.map"
-
-* = game_board_1 + 40*30*3
-.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
-* = game_board_1 + 40*30*4
-.binary "assets/HL_V2_Tile_map_layer_0__01_01.map"
-* = game_board_1 + 40*30*5
-.binary "assets/HL_V2_Tile_map_layer_0__00_01.map"
-* = game_board_1 + 40*30*6
-
+TILE_MAP_LAYER_0
+.binary "assets/Map/HL_V2_Tile_map_layer_2.map"
+TILE_MAP_LAYER_1 ; used for pnj path finding and player movement
+TILE_MAP_MOVEMENT
+.binary "assets/Map/HL_V2_Tile_map_layer_1.map"
+TILE_MAP_LAYER_2
+.binary "assets/Map/HL_V2_Tile_map_layer_0.map"
 
 PALETTE
 .binary "assets/menu/HLC256_Menu.pal"
@@ -1397,16 +1290,11 @@ VGM_BUTON_RELEASE
 
 * = $1a0000
 TILES ; just there to keep the Sprit code not complaining, wont be used for enyting at the moment
-TILE_SET_LEVEL_0_BMP
-.binary "assets/HL_V2_tile_set_256.bmp"
-* = TILE_SET_LEVEL_0_BMP + $20000
-TILE_SET_LEVEL_0_PIXEL
-
 
 
 * = $1B0000
 TILE_SET_LEVEL_1_BMP
-.binary "assets/HL_V2_tile_shifted_256.bmp"
+.binary "assets/Map/HL_V2_tile_shifted_256.bmp"
 SPRIT_GORDON_SCIENTIST_BMP
 .binary "assets/HL_V2_tile_shifted_Gordon_sientist.bmp"
 * = TILE_SET_LEVEL_1_BMP + $20000
@@ -1416,45 +1304,10 @@ SPRIT_GORDON_SCIENTIST_PIXEL
 .binary "assets/HL_V2_tile_shifted_Gordon_sientist_256.data"
 SPRIT_GORDON_SCIENTIST_PAL
 .binary "assets/HL_V2_tile_shifted_Gordon_sientist_256.data.pal"
-;* = $1B0000
-;HL_1
-;.binary "assets/halflife_1.pixel"
-;* = $1C0000
-;HL_2
-;.binary "assets/halflife_2.pixel"
-;* = $1D0000
-;HL_3
-;.binary "assets/halflife_3.pixel"
-;* = $1E0000
-;HL_4
-;.binary "assets/halflife_4.pixel"
-;* = $1F0000
-;HL_5
-;.binary "assets/halflife_5.pixel"
-* = $200000
-HL_BMP
-.binary "assets/menu/menu_main.bmp"
-;.binary "assets/halflife.bmp"
-* = $250000
-MENU_PLAY
-.binary "assets/menu/menu_play.bmp"
-MENU_PLAY_SELECTED
-.binary "assets/menu/menu_play-select.bmp"
-MENU_LOAD
-.binary "assets/menu/menu_load.bmp"
-* = $260000
-MENU_LOAD_SELECTED
-.binary "assets/menu/menu_load-select.bmp"
-MENU_OPSIONS
-.binary "assets/menu/menu_options.bmp"
-MENU_OPTIONS_SELECTED
-.binary "assets/menu/menu_options-select.bmp"
-* = $270000
-MENU_CREDIT
-.binary "assets/menu/menu_credits.bmp"
-MENU_CREDITS_SELECTED
-.binary "assets/menu/menu_credits-select.bmp"
-
-
-* = HL_BMP + $80000
-HL_PIXEL
+* = $300000
+PLAYER_1
+.binary "assets/pnj/Chaos_engine_spr_256.bmp" ; personage
+PLAYER_1_PAL
+.binary "assets/pnj/Chaos_engine_spr_256.pal"
+* = PLAYER_1 +$20000
+PLAYER_1_PIXEL

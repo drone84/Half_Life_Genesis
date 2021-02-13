@@ -56,7 +56,7 @@ DATA_STREAM_CNT   = $7D ; 2 byte
 DATA_STREAM_TBL   = $8000 ; each entry is 4 bytes
 
 ;* = $160000
-
+VGM_FILE_PTR  .dword 0
 VGM_START
                   .as
                   .xs
@@ -79,11 +79,11 @@ VGM_START
                   STA MSG_PTR+2
 
                   ; load the music
-                  LDA #`VGM_FILE
+                  LDA @l VGM_FILE_PTR+2 ;LDA #`VGM_FILE
                   STA CURRENT_POSITION + 2
                   STA SONG_START + 2
                   setal
-                  LDA #<>VGM_FILE
+                  LDA @l VGM_FILE_PTR ;LDA #<>VGM_FILE
                   STA SONG_START
                   setas
 
